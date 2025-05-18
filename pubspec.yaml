@@ -34,6 +34,14 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  chewie: ^1.11.3
+  lottie: ^3.3.1
+  supabase_flutter: ^2.9.0
+  timeago: ^3.7.1
+  image_picker: ^1.1.2
+  path: ^1.9.1
+  mime: ^2.0.0
+  device_preview: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -58,9 +66,45 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/football_action.jpg
+    - assets/images/1.jpg
+    - assets/images/2.jpg
+    - assets/images/3.jpg
+    - assets/images/5.jpeg
+    - assets/images/dali.jpeg
+    - assets/images/cr7.jpeg
+    - assets/images/mb.jpeg
+    - assets/images/goat.png
+    - assets/images/football_field.jpeg
+    - assets/images/club_logo.jpeg
+    - assets/images/player1.jpeg
+    - assets/images/scout.jpeg
+    - assets/images/6.jpeg
+    - assets/images/7.jpeg
+    - assets/images/8.jpeg
+    - assets/images/9.jpeg
+    - assets/images/10.jpeg
+    - assets/images/11.jpeg
+    - assets/images/12.jpeg
+    - assets/images/13.jpeg
+    - assets/images/14.jpeg  
+    - assets/images/logo.png
+    - assets/images/gold_foil_texture.png
+    - assets/images/club_logo.jpeg
+    - assets/images/player2.jpeg
+    - assets/images/player3.jpeg
+    - assets/images/player4.jpeg
+    - assets/images/player5.jpeg
+    - assets/images/player6.jpeg
+    - assets/images/player7.jpeg
+    - assets/images/player_avatar.jpeg
+    - assets/images/player_avatar1.jpeg
+    - assets/videos/football.mp4
+    - assets/videos/goal1.mp4
+    - assets/videos/goal2.mp4
+    - assets/videos/goal3.mp4
+    - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
