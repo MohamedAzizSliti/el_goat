@@ -34,30 +34,43 @@ class FootballerProfileModel {
     required this.createdAt,
     this.updatedAt,
     required this.experience,
-    required this.club,
+    this.club,
   });
 
   factory FootballerProfileModel.fromJson(Map<String, dynamic> json) {
     return FootballerProfileModel(
-      userId: json['user_id'] as String,
-      fullName: json['full_name'] as String,
-      dateOfBirth: DateTime.parse(json['date_of_birth'] as String),
-      nationality: json['nationality'] as String,
-      position: json['position'] as String,
-      preferredFoot: json['preferred_foot'] as String,
-      height: (json['height_cm'] as num).toDouble(),
-      weight: (json['weight_kg'] as num).toDouble(),
-      profileImage: json['profile_image'] as String?,
-      bio: json['bio'] as String?,
-      skills: List<String>.from(json['skills'] as List),
+      userId: json['user_id']?.toString() ?? '',
+      fullName: json['full_name']?.toString() ?? 'Unknown Player',
+      dateOfBirth:
+          json['dob'] != null || json['date_of_birth'] != null
+              ? DateTime.tryParse(
+                    (json['dob'] ?? json['date_of_birth']).toString(),
+                  ) ??
+                  DateTime(2000)
+              : DateTime(2000),
+      nationality: json['nationality']?.toString() ?? 'Unknown',
+      position: json['position']?.toString() ?? 'Unknown',
+      preferredFoot: json['preferred_foot']?.toString() ?? 'Right',
+      height: (json['height_cm'] as num?)?.toDouble() ?? 175.0,
+      weight: (json['weight_kg'] as num?)?.toDouble() ?? 70.0,
+      profileImage: json['profile_image']?.toString(),
+      bio: json['bio']?.toString(),
+      skills:
+          json['skills'] != null
+              ? List<String>.from(json['skills'] as List)
+              : <String>[],
       statistics: json['statistics'] as Map<String, dynamic>?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.tryParse(json['created_at'].toString()) ??
+                  DateTime.now()
+              : DateTime.now(),
       updatedAt:
           json['updated_at'] != null
-              ? DateTime.parse(json['updated_at'] as String)
+              ? DateTime.tryParse(json['updated_at'].toString())
               : null,
-      experience: json['experience_level'] as String,
-      club: json['current_club'] as String?,
+      experience: json['experience_level']?.toString() ?? 'Beginner',
+      club: json['current_club']?.toString(),
     );
   }
 

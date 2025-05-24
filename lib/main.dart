@@ -1,8 +1,8 @@
 import 'package:el_goat/screens/profile_page.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'screens/main_navigation.dart';
 import 'screens/home_page.dart';
 import 'screens/news_home_page.dart';
 import 'screens/stories_page.dart';
@@ -10,7 +10,6 @@ import 'screens/news_reels_page.dart';
 import 'screens/registration_page.dart';
 import 'screens/login.dart';
 import 'screens/accueil_page.dart';
-import 'screens/user_profile_page.dart';
 import 'screens/scout_profile_page.dart';
 import 'screens/club_profil_page.dart';
 import 'screens/chat_page.dart';
@@ -72,11 +71,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'El Goat',
-      theme: AppTheme.theme,
-      themeMode: ThemeMode.light,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomePage(),
+        '/': (context) => const MainNavigation(),
+        '/home': (context) => const HomePage(),
         '/news_home': (ctx) => NewsHomePage(toggleTheme: () {}),
         '/stories': (ctx) => const StoriesPage(),
         '/news_reels': (ctx) => const NewsReelsPage(),

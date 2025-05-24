@@ -9,7 +9,6 @@ import 'scoutsignup_page.dart';
 import 'footballersignup_page.dart';
 import '../theme/app_theme.dart';
 
-
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
 
@@ -61,13 +60,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
         role: _selectedCategory!,
       );
 
-
       if (user == null) {
         throw Exception('Failed to create user');
       }
 
       if (!mounted) return;
-
 
       // Navigate to role-specific form
       late Widget nextPage;
@@ -192,7 +189,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -204,10 +200,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.sports_soccer,
-                          size: 40,
-                          color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -254,7 +254,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               ),
                             ),
                           ),
-
                         ),
                       ),
                       Expanded(
@@ -278,60 +277,70 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ),
                     ],
                   ),
+                ),
 
-                  const SizedBox(height: 30),
+                const SizedBox(height: 32),
 
-                  // Name
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: _inputDecoration('Full Name', Icons.person),
-                    style: const TextStyle(color: Colors.white),
-                    validator:
-                        (v) => (v ?? '').isEmpty ? 'Enter your name' : null,
+                // Full Name Field
+                TextFormField(
+                  controller: _nameController,
+                  validator:
+                      (v) => (v ?? '').isEmpty ? 'Enter your full name' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    hintText: 'Enter your full name',
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
-                  const SizedBox(height: 20),
+                ),
 
-                  // Email
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: _inputDecoration('Email', Icons.email),
-                    style: const TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      if ((v ?? '').isEmpty) return 'Enter your email';
-                      final re = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                      return re.hasMatch(v!) ? null : 'Invalid email';
-                    },
+                const SizedBox(height: 16),
+
+                // Email Field
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if ((v ?? '').isEmpty) return 'Enter your email';
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(v!)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Email Address',
+                    hintText: 'Enter your email',
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
-                  const SizedBox(height: 20),
+                ),
 
-                  // Password
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: _inputDecoration(
-                      'Password',
-                      Icons.lock,
-                    ).copyWith(
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Colors.white54,
-                        ),
-                        onPressed:
-                            () => setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            ),
+                const SizedBox(height: 16),
+
+                // Password Field
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  validator:
+                      (v) =>
+                          (v ?? '').length < 8
+                              ? 'Password must be at least 8 characters'
+                              : null,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: 'Enter your password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
+                      onPressed:
+                          () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                     ),
-                    style: const TextStyle(color: Colors.white),
-                    validator:
-                        (v) =>
-                            (v ?? '').length < 8
-                                ? 'Password min 8 chars'
-                                : null,
                   ),
                 ),
 

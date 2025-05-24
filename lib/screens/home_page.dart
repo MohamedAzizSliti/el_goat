@@ -1,7 +1,6 @@
 // lib/screens/home_page.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../widgets/navbar/bottom_navbar.dart';
 import '../theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,58 +11,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
-
   bool get isUserConnected => Supabase.instance.client.auth.currentUser != null;
-
-  void _onNavTapped(int idx) async {
-    setState(() => _selectedIndex = idx);
-
-    if (idx == 3) {
-      // Profile tab
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        if (mounted) Navigator.pushNamed(context, '/login_required');
-        return;
-      }
-
-      // Fetch the user's role
-      final roleResponse =
-          await Supabase.instance.client
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', userId)
-              .maybeSingle();
-
-      if (!mounted) return;
-
-
-      if (roleResponse == null || roleResponse['role'] == null) {
-        Navigator.pushNamed(context, '/login_required');
-        return;
-      }
-
-      final role = roleResponse['role'];
-
-      // Navigate to the appropriate profile page
-      switch (role) {
-        case 'footballer':
-          Navigator.pushNamed(context, '/footballer_profile');
-          break;
-        case 'scout':
-          Navigator.pushNamed(context, '/scout_profile');
-          break;
-        case 'club':
-          Navigator.pushNamed(context, '/club_profile');
-          break;
-        default:
-          Navigator.pushNamed(context, '/login_required');
-      }
-    } else {
-      const routes = ['/', '/stories', '/news_home', '/footballer_profile'];
-      if (idx < routes.length) Navigator.pushNamed(context, routes[idx]);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +104,7 @@ class _HomePageState extends State<HomePage> {
                     onPressed:
                         () => Navigator.pushNamed(context, '/registration'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _accent,
+                      backgroundColor: AppTheme.accentColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -385,10 +333,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onNavTapped,
       ),
     );
   }

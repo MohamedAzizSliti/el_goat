@@ -107,7 +107,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ],
-
                   ),
                 ),
 
@@ -159,7 +158,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-
+                        ),
                       ),
                     ],
                   ),
@@ -170,7 +169,15 @@ class _LoginPageState extends State<LoginPage> {
                 // Email Field
                 TextFormField(
                   controller: _emailController,
-                  validator: _validateEmail,
+                  validator: (v) {
+                    if ((v ?? '').isEmpty) return 'Enter your email';
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(v!)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email Address',
@@ -184,7 +191,11 @@ class _LoginPageState extends State<LoginPage> {
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
-                  validator: _validatePassword,
+                  validator:
+                      (v) =>
+                          (v ?? '').length < 8
+                              ? 'Password must be at least 8 characters'
+                              : null,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
@@ -293,7 +304,6 @@ class _LoginPageState extends State<LoginPage> {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondaryLight,
-
                   ),
                 ),
               ],
