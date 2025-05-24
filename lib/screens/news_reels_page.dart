@@ -97,7 +97,10 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
         // Stay on NewsReelsPage
         break;
       case 3:
-        Navigator.pushNamed(context, '/profile'); // Navigate to Profile
+        Navigator.pushNamed(
+          context,
+          '/footballer_profile',
+        ); // Navigate to Profile
         break;
     }
   }
@@ -143,9 +146,10 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
               children: [
                 // Video Player
                 SizedBox.expand(
-                  child: _videoController.value.isInitialized
-                      ? VideoPlayer(_videoController)
-                      : const Center(child: CircularProgressIndicator()),
+                  child:
+                      _videoController.value.isInitialized
+                          ? VideoPlayer(_videoController)
+                          : const Center(child: CircularProgressIndicator()),
                 ),
                 // Play/Pause Button
                 if (_showPlayPauseButton)
@@ -208,8 +212,10 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
                           Column(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.favorite,
-                                    color: Colors.red),
+                                icon: const Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () {
                                   // Handle like action
                                 },
@@ -223,8 +229,10 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
                           Column(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.comment,
-                                    color: Colors.white),
+                                icon: const Icon(
+                                  Icons.comment,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   // Handle comment action
                                 },
@@ -238,8 +246,10 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
                           Column(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.share,
-                                    color: Colors.white),
+                                icon: const Icon(
+                                  Icons.share,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   // Handle share action
                                 },
@@ -253,8 +263,10 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
                           Column(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.bookmark,
-                                    color: Colors.white),
+                                icon: const Icon(
+                                  Icons.bookmark,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   // Handle save action
                                 },

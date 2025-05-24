@@ -28,11 +28,12 @@ class _ClubProfilePageState extends State<ClubProfilePage> {
       setState(() => _loading = false);
       return;
     }
-    final res = await Supabase.instance.client
-        .from('club_profiles')
-        .select()
-        .eq('user_id', widget.clubUserId)
-        .maybeSingle();
+    final res =
+        await Supabase.instance.client
+            .from('club_profiles')
+            .select()
+            .eq('user_id', widget.clubUserId)
+            .maybeSingle();
     setState(() {
       _club = (res is Map<String, dynamic>) ? res : null;
       _loading = false;
@@ -42,24 +43,26 @@ class _ClubProfilePageState extends State<ClubProfilePage> {
   Future<String> _getMyRole() async {
     final me = Supabase.instance.client.auth.currentUser?.id;
     if (me == null) return 'normal';
-    final scout = await Supabase.instance.client
-        .from('scout_profiles')
-        .select()
-        .eq('user_id', me)
-        .maybeSingle();
+    final scout =
+        await Supabase.instance.client
+            .from('scout_profiles')
+            .select()
+            .eq('user_id', me)
+            .maybeSingle();
     if (scout != null) return 'scout';
-    final footballer = await Supabase.instance.client
-        .from('footballer_profiles')
-        .select()
-        .eq('user_id', me)
-        .maybeSingle();
+    final footballer =
+        await Supabase.instance.client
+            .from('footballer_profiles')
+            .select()
+            .eq('user_id', me)
+            .maybeSingle();
     if (footballer != null) return 'footballer';
     return 'normal';
   }
 
   void _onNav(int idx) {
     setState(() => _selectedIndex = idx);
-    const routes = ['/', '/stories', '/news_home', '/profile'];
+    const routes = ['/', '/stories', '/news_home', '/footballer_profile'];
     Navigator.pushNamed(context, routes[idx]);
   }
 
@@ -83,23 +86,28 @@ class _ClubProfilePageState extends State<ClubProfilePage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text(club['club_name'] ?? 'Club Profile', style: const TextStyle(color: Colors.white)),
+        title: Text(
+          club['club_name'] ?? 'Club Profile',
+          style: const TextStyle(color: Colors.white),
+        ),
         actions: [
           FutureBuilder<String>(
             future: _getMyRole(),
             builder: (ctx, snap) {
-              if (snap.data == null || snap.data == 'normal') return const SizedBox();
+              if (snap.data == null || snap.data == 'normal')
+                return const SizedBox();
               return IconButton(
                 icon: const Icon(Icons.message, color: Colors.white),
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        otherUserId: widget.clubUserId,
-                        otherUserName: club['club_name'] ?? 'Club',
-                        otherUserImage: club['logo_url'] ?? '',
-                      ),
+                      builder:
+                          (_) => ChatScreen(
+                            otherUserId: widget.clubUserId,
+                            otherUserName: club['club_name'] ?? 'Club',
+                            otherUserImage: club['logo_url'] ?? '',
+                          ),
                     ),
                   );
                 },
@@ -118,42 +126,73 @@ class _ClubProfilePageState extends State<ClubProfilePage> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: club['logo_url'] != null
-                        ? NetworkImage(club['logo_url'])
-                        : const AssetImage('assets/images/club_logo.jpeg') as ImageProvider,
+                    backgroundImage:
+                        club['logo_url'] != null
+                            ? NetworkImage(club['logo_url'])
+                            : const AssetImage('assets/images/club_logo.jpeg')
+                                as ImageProvider,
                   ),
                   const SizedBox(height: 12),
-                  Text(club['club_name'], style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(
+                    club['club_name'],
+                    style: const TextStyle(
+                      fontSize: 24,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('${club['location']}', style: const TextStyle(color: Colors.grey)),
+                  Text(
+                    '${club['location']}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _buildSection(
-                  title: 'Informations générales',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Localisation: ${club['location']}', style: const TextStyle(color: Colors.white)),
-                      Text('Site web: ${club['website'] ?? "—"}', style: const TextStyle(color: Colors.white)),
-                      Text('Membres staff: ${club['staff_count'] ?? "—"}', style: const TextStyle(color: Colors.white)),
-                    ],
+                Expanded(
+                  child: _buildSection(
+                    title: 'Informations générales',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Localisation: ${club['location']}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          'Site web: ${club['website'] ?? "—"}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          'Membres staff: ${club['staff_count'] ?? "—"}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
                   ),
-                )),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildSection(
-                  title: 'Recrutement',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Recherche: ${club['recruiting'] == true ? "Oui" : "Non"}', style: const TextStyle(color: Colors.white)),
-                      Text('Postes: ${club['positions'] ?? "—"}', style: const TextStyle(color: Colors.white)),
-                    ],
+                Expanded(
+                  child: _buildSection(
+                    title: 'Recrutement',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Recherche: ${club['recruiting'] == true ? "Oui" : "Non"}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          'Postes: ${club['positions'] ?? "—"}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
                   ),
-                )),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -173,25 +212,41 @@ class _ClubProfilePageState extends State<ClubProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(club['news'] ?? 'Aucune annonce pour le moment.', style: const TextStyle(color: Colors.white)),
+                  Text(
+                    club['news'] ?? 'Aucune annonce pour le moment.',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavbar(selectedIndex: _selectedIndex, onItemTapped: _onNav),
+      bottomNavigationBar: BottomNavbar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onNav,
+      ),
     );
   }
 
   Widget _buildSection({required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.yellow, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.yellow,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           child,
         ],

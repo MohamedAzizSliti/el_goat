@@ -32,7 +32,10 @@ class _GamificationDashboardState extends State<GamificationDashboard>
         Navigator.pushNamed(context, '/news_home'); // Navigate to News
         break;
       case 3:
-        Navigator.pushNamed(context, '/profile'); // Navigate to Profile
+        Navigator.pushNamed(
+          context,
+          '/footballer_profile',
+        ); // Navigate to Profile
         break;
     }
   }
@@ -86,21 +89,24 @@ class _GamificationDashboardState extends State<GamificationDashboard>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Level 7 - Rising Star",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Level 7 - Rising Star",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: xpProgress),
               duration: const Duration(seconds: 2),
-              builder: (context, value, child) => LinearProgressIndicator(
-                value: value,
-                backgroundColor: Colors.grey[300],
-                color: Colors.green,
-                minHeight: 8,
-              ),
+              builder:
+                  (context, value, child) => LinearProgressIndicator(
+                    value: value,
+                    backgroundColor: Colors.grey[300],
+                    color: Colors.green,
+                    minHeight: 8,
+                  ),
             ),
             const SizedBox(height: 10),
-            const Text("XP: 1,400 / 2,000")
+            const Text("XP: 1,400 / 2,000"),
           ],
         ),
       ),
@@ -113,8 +119,10 @@ class _GamificationDashboardState extends State<GamificationDashboard>
         Expanded(
           child: Card(
             child: ListTile(
-              leading:
-                  const Icon(Icons.local_fire_department, color: Colors.red),
+              leading: const Icon(
+                Icons.local_fire_department,
+                color: Colors.red,
+              ),
               title: const Text("Daily Streak"),
               subtitle: const Text("🔥 5 Days"),
             ),
@@ -166,7 +174,7 @@ class _GamificationDashboardState extends State<GamificationDashboard>
                 ]),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -174,13 +182,8 @@ class _GamificationDashboardState extends State<GamificationDashboard>
 
   Widget _buildList(List<String> items) {
     return ListView(
-      children: items
-          .map((e) => Card(
-                child: ListTile(
-                  title: Text(e),
-                ),
-              ))
-          .toList(),
+      children:
+          items.map((e) => Card(child: ListTile(title: Text(e)))).toList(),
     );
   }
 }

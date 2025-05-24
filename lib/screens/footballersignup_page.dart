@@ -6,7 +6,8 @@ import '../screens/success_page.dart';
 
 class FootballerSignUpPage extends StatefulWidget {
   final String userId;
-  const FootballerSignUpPage({Key? key, required this.userId}) : super(key: key);
+  const FootballerSignUpPage({Key? key, required this.userId})
+    : super(key: key);
 
   @override
   State<FootballerSignUpPage> createState() => _FootballerSignUpPageState();
@@ -68,7 +69,8 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
 
     if (picked != null) {
       setState(() {
-        _dobCtrl.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+        _dobCtrl.text =
+            "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
       });
     }
   }
@@ -84,21 +86,54 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
       final profile = {
         'user_id': widget.userId,
         'full_name': _fullNameCtrl.text.trim(),
+        'date_of_birth': dobFormatted,
+        'position': position ?? 'Not specified',
+        'preferred_foot': foot ?? 'Not specified',
+        'height_cm': double.parse(_heightCtrl.text.trim()),
+        'weight_kg': double.parse(_weightCtrl.text.trim()),
         'phone': _phoneCtrl.text.trim(),
-        'dob': dobFormatted,
-        'position': position,
-        'preferred_foot': foot,
-        'height_cm': int.parse(_heightCtrl.text.trim()),
-        'weight_kg': int.parse(_weightCtrl.text.trim()),
-        'experience_level': experience,
-        'current_club': _clubCtrl.text.trim().isEmpty ? 'None' : _clubCtrl.text.trim(),
+        'current_club':
+            _clubCtrl.text.trim().isEmpty ? 'None' : _clubCtrl.text.trim(),
+        'experience_level': experience ?? 'Not specified',
+        'created_at': DateTime.now().toIso8601String(),
         'last_seen': DateTime.now().toIso8601String(),
       };
 
-      // Insert the data allowing multiple rows
-      await _supabase
-          .from('footballer_profiles')
-          .insert(profile);
+      // First try to get existing profile
+      final existingProfile =
+          await _supabase
+              .from('footballer_profiles')
+              .select()
+              .eq('user_id', widget.userId)
+              .maybeSingle();
+
+      if (existingProfile != null) {
+        // Update existing profile
+        await _supabase
+            .from('footballer_profiles')
+            .update(profile)
+            .eq('user_id', widget.userId);
+      } else {
+        // Create new profile
+        await _supabase.from('footballer_profiles').insert(profile);
+      }
+
+      // Try to create player_skills entry
+      try {
+        // First try to create the table if it doesn't exist
+        await _supabase.rpc('create_player_skills_table');
+
+        // Then create the player skills entry
+        await _supabase.from('player_skills').upsert({
+          'user_id': widget.userId,
+          'technical_skills': {},
+          'physical_attributes': {},
+          'mental_attributes': {},
+        }, onConflict: 'user_id');
+      } catch (e) {
+        print('Error creating player skills: $e');
+        // Don't throw error - we'll handle this in the profile page
+      }
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -124,12 +159,12 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
   }
 
   Widget _buildLabel(String text) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 4),
-        child: Text(
-          text,
-          style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 12, bottom: 4),
+    child: Text(
+      text,
+      style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500),
+    ),
+  );
 
   Widget _buildTextField(
     String hint,
@@ -139,48 +174,48 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
     bool readOnly = false,
     VoidCallback? onTap,
     String? Function(String?)? validator,
-  }) =>
-      TextFormField(
-        controller: ctrl,
-        style: const TextStyle(color: Colors.white),
-        keyboardType: keyboard,
-        readOnly: readOnly,
-        onTap: onTap,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
-          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey) : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
+  }) => TextFormField(
+    controller: ctrl,
+    style: const TextStyle(color: Colors.white),
+    keyboardType: keyboard,
+    readOnly: readOnly,
+    onTap: onTap,
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.grey[800],
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.grey),
+      prefixIcon:
+          prefixIcon != null ? Icon(prefixIcon, color: Colors.grey) : null,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
+  );
 
   Widget _buildDropdown(
     List<String> items,
     String? value,
     void Function(String?) onChanged,
-  ) =>
-      DropdownButtonFormField<String>(
-        value: value,
-        dropdownColor: Colors.grey[900],
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
-        validator: (v) => (v == null || v.isEmpty) ? 'Please select' : null,
-      );
+  ) => DropdownButtonFormField<String>(
+    value: value,
+    dropdownColor: Colors.grey[900],
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.grey[800],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    items:
+        items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+    onChanged: onChanged,
+    validator: (v) => (v == null || v.isEmpty) ? 'Please select' : null,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +279,8 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                         return 'Use DD/MM/YYYY';
                       }
                       final parts = val.split('/');
-                      final iso = '${parts[2]}-${parts[1].padLeft(2,'0')}-${parts[0].padLeft(2,'0')}';
+                      final iso =
+                          '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
                       final date = DateTime.tryParse(iso);
                       if (date == null) return 'Invalid date';
                       final age = DateTime.now().difference(date).inDays ~/ 365;
@@ -253,10 +289,17 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                     },
                   ),
                   _buildLabel('Position'),
-                  _buildDropdown(['Goalkeeper', 'Defender', 'Midfielder', 'Striker'], position,
-                      (val) => setState(() => position = val)),
+                  _buildDropdown(
+                    ['Goalkeeper', 'Defender', 'Midfielder', 'Striker'],
+                    position,
+                    (val) => setState(() => position = val),
+                  ),
                   _buildLabel('Preferred Foot'),
-                  _buildDropdown(['Left', 'Right', 'Both'], foot, (val) => setState(() => foot = val)),
+                  _buildDropdown(
+                    ['Left', 'Right', 'Both'],
+                    foot,
+                    (val) => setState(() => foot = val),
+                  ),
                   _buildLabel('Height (cm)'),
                   _buildTextField(
                     'Enter height',
@@ -284,10 +327,17 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                     },
                   ),
                   _buildLabel('Experience Level'),
-                  _buildDropdown(['Beginner', 'Semi-Pro', 'Professional'], experience,
-                      (val) => setState(() => experience = val)),
+                  _buildDropdown(
+                    ['Beginner', 'Semi-Pro', 'Professional'],
+                    experience,
+                    (val) => setState(() => experience = val),
+                  ),
                   _buildLabel('Current Club (Optional)'),
-                  _buildTextField('Enter club name', _clubCtrl, validator: (_) => null),
+                  _buildTextField(
+                    'Enter club name',
+                    _clubCtrl,
+                    validator: (_) => null,
+                  ),
                   const SizedBox(height: 30),
                   SizedBox(
                     width: double.infinity,
@@ -300,9 +350,18 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Save & Continue', style: TextStyle(color: Colors.white, fontSize: 18)),
+                      child:
+                          _isSaving
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text(
+                                'Save & Continue',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              ),
                     ),
                   ),
                 ],

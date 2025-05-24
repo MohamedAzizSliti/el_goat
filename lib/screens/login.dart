@@ -15,31 +15,33 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
 
   void _login() async {
-  setState(() => _isLoading = true);
-  try {
-    final AuthResponse res = await Supabase.instance.client.auth.signInWithPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-    debugPrint('▶️ signIn response.user: ${res.user}');
-    if (res.session == null || res.user == null) {
-      throw AuthException('Authentication failed: No session or user returned');
+    setState(() => _isLoading = true);
+    try {
+      final AuthResponse res = await Supabase.instance.client.auth
+          .signInWithPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+      debugPrint('▶️ signIn response.user: ${res.user}');
+      if (res.session == null || res.user == null) {
+        throw AuthException(
+          'Authentication failed: No session or user returned',
+        );
+      }
+      // At this point session exists:
+      Navigator.pushReplacementNamed(context, '/');
+    } on AuthException catch (err) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(err.message)));
+    } catch (err) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unexpected error: $err')));
+    } finally {
+      setState(() => _isLoading = false);
     }
-    // At this point session exists:
-    Navigator.pushReplacementNamed(context, '/');
-  } on AuthException catch (err) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(err.message)),
-    );
-  } catch (err) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Unexpected error: $err')),
-    );
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -59,11 +61,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/images/goat.png',
-                    height: 40,
-                    width: 40,
-                  ),
+                  Image.asset('assets/images/goat.png', height: 40, width: 40),
                   const SizedBox(height: 20),
                   const Text(
                     'Welcome to',
@@ -98,7 +96,8 @@ class _LoginPageState extends State<LoginPage> {
                       Container(height: 10, width: 1, color: Colors.white),
                       const SizedBox(width: 10),
                       GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/registration'),
+                        onTap:
+                            () => Navigator.pushNamed(context, '/registration'),
                         child: const Text(
                           'Sign up',
                           style: TextStyle(color: Colors.white, fontSize: 16),
@@ -144,17 +143,26 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow,
-                      padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 80,
+                        vertical: 15,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text(
-                            'Login',
-                            style: TextStyle(color: Colors.black, fontSize: 18),
-                          ),
+                    child:
+                        _isLoading
+                            ? const CircularProgressIndicator(
+                              color: Colors.black,
+                            )
+                            : const Text(
+                              'Login',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                              ),
+                            ),
                   ),
                 ],
               ),

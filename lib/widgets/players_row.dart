@@ -6,63 +6,67 @@ class PlayersRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, String>> players = [
-      {'name': 'Player 1', 'image': 'assets/images/1.jpg', 'route': '/profile'},
+      {
+        'name': 'Player 1',
+        'image': 'assets/images/1.jpg',
+        'route': '/footballer_profile',
+      },
       {'name': 'Player 2', 'image': 'assets/images/2.jpg', 'route': '/player2'},
       {'name': 'Player 3', 'image': 'assets/images/3.jpg', 'route': '/player3'},
       {
         'name': 'Player 4',
         'image': 'assets/images/5.jpeg',
-        'route': '/player4'
+        'route': '/player4',
       },
       {
         'name': 'Player 5',
         'image': 'assets/images/6.jpeg',
-        'route': '/player5'
+        'route': '/player5',
       },
       {
         'name': 'Player 6',
         'image': 'assets/images/7.jpeg',
-        'route': '/player6'
+        'route': '/player6',
       },
       {
         'name': 'Player 7',
         'image': 'assets/images/8.jpeg',
-        'route': '/player7'
+        'route': '/player7',
       },
       {
         'name': 'Player 8',
         'image': 'assets/images/9.jpeg',
-        'route': '/player8'
+        'route': '/player8',
       },
       {
         'name': 'Player 9',
         'image': 'assets/images/10.jpeg',
-        'route': '/player9'
+        'route': '/player9',
       },
       {
         'name': 'Player 10',
         'image': 'assets/images/11.jpeg',
-        'route': '/player10'
+        'route': '/player10',
       },
       {
         'name': 'Player 11',
         'image': 'assets/images/12.jpeg',
-        'route': '/player11'
+        'route': '/player11',
       },
       {
         'name': 'Player 12',
         'image': 'assets/images/13.jpeg',
-        'route': '/player12'
+        'route': '/player12',
       },
       {
         'name': 'Player 13',
         'image': 'assets/images/14.jpeg',
-        'route': '/player13'
+        'route': '/player13',
       },
       {
         'name': 'Player 14',
         'image': 'assets/images/15.jpeg',
-        'route': '/player14'
+        'route': '/player14',
       },
     ];
 
@@ -88,10 +92,7 @@ class PlayersRow extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     player['name']!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                    ),
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
                   ),
                 ],
               ),
