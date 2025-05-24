@@ -16,37 +16,37 @@ class _StoriesPageState extends State<StoriesPage> {
       "name": "Story 1",
       "image": "assets/images/1.jpg",
       "title": "Story",
-      "subtitle": "This is the first story"
+      "subtitle": "This is the first story",
     },
     {
       "name": "Story 2",
       "image": "assets/images/2.jpg",
       "title": "Story",
-      "subtitle": "This is the second story"
+      "subtitle": "This is the second story",
     },
     {
       "name": "Story 3",
       "image": "assets/images/5.jpeg",
       "title": "Story",
-      "subtitle": "This is the third story"
+      "subtitle": "This is the third story",
     },
     {
       "name": "Story 4",
       "image": "assets/images/3.jpg",
       "title": "Story",
-      "subtitle": "This is the fourth story"
+      "subtitle": "This is the fourth story",
     },
     {
       "name": "Story 5",
       "image": "assets/images/mb.jpeg",
       "title": "Story",
-      "subtitle": "This is the fifth story"
+      "subtitle": "This is the fifth story",
     },
     {
       "name": "Story 6",
       "image": "assets/images/cr7.jpeg",
       "title": "Story",
-      "subtitle": "This is the sixth story"
+      "subtitle": "This is the sixth story",
     },
   ];
 
@@ -66,7 +66,7 @@ class _StoriesPageState extends State<StoriesPage> {
         Navigator.pushNamed(context, '/news');
         break;
       case 3:
-        Navigator.pushNamed(context, '/profile');
+        Navigator.pushNamed(context, '/footballer_profile');
         break;
     }
   }
@@ -79,7 +79,7 @@ class _StoriesPageState extends State<StoriesPage> {
           gradient: LinearGradient(
             colors: [
               Color.fromARGB(220, 12, 9, 0),
-              Color.fromARGB(255, 136, 98, 49)
+              Color.fromARGB(255, 136, 98, 49),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -94,7 +94,9 @@ class _StoriesPageState extends State<StoriesPage> {
               margin: const EdgeInsets.symmetric(vertical: 10),
               height: MediaQuery.of(context).size.width * 0.5,
               decoration: BoxDecoration(
-                  color: Colors.grey, borderRadius: BorderRadius.circular(10)),
+                color: Colors.grey,
+                borderRadius: BorderRadius.circular(10),
+              ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
                 children: [
@@ -108,37 +110,43 @@ class _StoriesPageState extends State<StoriesPage> {
                     width: MediaQuery.of(context).size.width,
                     height: MediaQuery.of(context).size.width * 0.5,
                     decoration: BoxDecoration(
-                      color: index % 2 == 0
-                          ? Colors.black.withOpacity(0.7)
-                          : Colors.grey.withOpacity(0.35),
+                      color:
+                          index % 2 == 0
+                              ? Colors.black.withOpacity(0.7)
+                              : Colors.grey.withOpacity(0.35),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 25, horizontal: 20),
+                      vertical: 25,
+                      horizontal: 20,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           sObj["title"],
                           style: const TextStyle(
-                              color: Colors.blue,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
+                            color: Colors.blue,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         Text(
                           sObj["name"],
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700),
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         Text(
                           sObj["subtitle"],
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const Spacer(),
                         Row(
@@ -154,13 +162,14 @@ class _StoriesPageState extends State<StoriesPage> {
                                 child: const Text(
                                   "see more",
                                   style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),

@@ -26,61 +26,32 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
     try {
-      await _authService.login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/');
+      final AuthResponse res = await Supabase.instance.client.auth
+          .signInWithPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+      debugPrint('▶️ signIn response.user: ${res.user}');
+      if (res.session == null || res.user == null) {
+        throw AuthException(
+          'Authentication failed: No session or user returned',
+        );
       }
+      // At this point session exists:
+      Navigator.pushReplacementNamed(context, '/');
     } on AuthException catch (err) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(err.message),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(err.message)));
     } catch (err) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Unexpected error: $err'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unexpected error: $err')));
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      setState(() => _isLoading = false);
     }
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email is required';
-    }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
   }
 
   @override
@@ -136,6 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ],
+
                   ),
                 ),
 
@@ -187,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                        ),
+
                       ),
                     ],
                   ),
@@ -321,6 +293,7 @@ class _LoginPageState extends State<LoginPage> {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondaryLight,
+
                   ),
                 ),
               ],

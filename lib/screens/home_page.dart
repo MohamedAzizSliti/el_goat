@@ -14,6 +14,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
+  bool get isUserConnected => Supabase.instance.client.auth.currentUser != null;
+
   void _onNavTapped(int idx) async {
     setState(() => _selectedIndex = idx);
 
@@ -34,6 +36,7 @@ class _HomePageState extends State<HomePage> {
               .maybeSingle();
 
       if (!mounted) return;
+
 
       if (roleResponse == null || roleResponse['role'] == null) {
         Navigator.pushNamed(context, '/login_required');
@@ -57,7 +60,7 @@ class _HomePageState extends State<HomePage> {
           Navigator.pushNamed(context, '/login_required');
       }
     } else {
-      const routes = ['/', '/stories', '/news_home', '/profile'];
+      const routes = ['/', '/stories', '/news_home', '/footballer_profile'];
       if (idx < routes.length) Navigator.pushNamed(context, routes[idx]);
     }
   }
@@ -102,7 +105,12 @@ class _HomePageState extends State<HomePage> {
                 'Profile',
                 style: TextStyle(color: Colors.white),
               ),
-              onTap: () => Navigator.pushReplacementNamed(context, '/profile'),
+
+              onTap:
+                  () => Navigator.pushReplacementNamed(
+                    context,
+                    '/footballer_profile',
+                  ),
             ),
           ],
         ),
@@ -134,32 +142,64 @@ class _HomePageState extends State<HomePage> {
                 // Your logo
                 Image.asset('assets/images/logo.png', height: 40),
                 const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/login'),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed:
-                      () => Navigator.pushNamed(context, '/registration'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
+
+                if (!isUserConnected) ...[
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-                  child: const Text(
-                    'Sign Up',
-                    style: TextStyle(color: Colors.black),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed:
+                        () => Navigator.pushNamed(context, '/registration'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _accent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                    ),
+                    child: const Text(
+                      'Sign Up',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
-                ),
+                ] else ...[
+                  if (Supabase.instance.client.auth.currentUser?.email != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Text(
+                        Supabase.instance.client.auth.currentUser!.email!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await Supabase.instance.client.auth.signOut();
+                      setState(() {}); // Refresh UI
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                    ),
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -289,7 +329,8 @@ class _HomePageState extends State<HomePage> {
                               onTap:
                                   () => Navigator.pushNamed(
                                     context,
-                                    '/profile',
+
+                                    '/footballer_profile',
                                     arguments: {'id': '$i'},
                                   ),
                               child: CircleAvatar(

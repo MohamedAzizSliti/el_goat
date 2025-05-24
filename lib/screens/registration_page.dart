@@ -2,10 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/auth_service.dart';
+import '../models/user_model.dart';
 import 'clubsigup_page.dart';
 import 'scoutsignup_page.dart';
 import 'footballersignup_page.dart';
 import '../theme/app_theme.dart';
+
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -21,6 +24,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _passwordController = TextEditingController();
   String? _selectedCategory;
   bool _isLoading = false;
+
+  bool _obscurePassword = true;
+
+  late final AuthService _authService;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = AuthService(Supabase.instance.client);
+  }
 
   @override
   void dispose() {
@@ -41,99 +54,65 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() => _isLoading = true);
 
     try {
-      final supabase = Supabase.instance.client;
-
-      // 1️⃣ Sign up with Supabase Auth
-      final AuthResponse res = await supabase.auth.signUp(
+      final user = await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
+        fullName: _nameController.text.trim(),
+        role: _selectedCategory!,
       );
-      if (res.session == null || res.user == null) {
-        throw AuthException('Sign-up failed: no session/user returned');
-      }
-      final userId = res.user!.id;
 
-      // 2️⃣ Insert base profile in the correct table
-      final tableName = '${_selectedCategory!.toLowerCase()}_profiles';
-      final insertResp =
-          await supabase.from(tableName).insert({
-            'user_id': userId,
-            'full_name': _nameController.text.trim(),
-            'created_at': DateTime.now().toIso8601String(),
-          }).select();
 
-      if (insertResp.isEmpty) {
-        throw Exception('Profile insert failed.');
+      if (user == null) {
+        throw Exception('Failed to create user');
       }
 
-      // 3️⃣ Insert the user's role into the `user_roles` table
-      await supabase.from('user_roles').insert({
-        'user_id': userId,
-        'role': _selectedCategory!.toLowerCase(),
-      });
+      if (!mounted) return;
 
-      // 4️⃣ Navigate to the role-specific sign-up form or complete registration for Fan
+
+      // Navigate to role-specific form
+      late Widget nextPage;
       switch (_selectedCategory!.toLowerCase()) {
         case 'footballer':
-          final nextPage = FootballerSignUpPage(userId: userId);
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => nextPage),
-            );
-          }
+          nextPage = FootballerSignUpPage(userId: user.id);
           break;
         case 'scout':
-          final nextPage = ScoutSignUpPage(userId: userId);
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => nextPage),
-            );
-          }
+          nextPage = ScoutSignUpPage(userId: user.id);
           break;
         case 'club':
-          final nextPage = ClubSignUpPage(userId: userId);
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => nextPage),
-            );
-          }
-          break;
-        case 'fan':
-          // For fans, complete registration here and redirect to home
-          await supabase.from('profiles').insert({
-            'id': userId,
-            'full_name': _nameController.text.trim(),
-            'role': 'fan',
-            'created_at': DateTime.now().toIso8601String(),
-          });
-
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/');
-          }
+          nextPage = ClubSignUpPage(userId: user.id);
           break;
         default:
-          throw Exception('Unknown category');
+          throw Exception('Invalid category');
       }
-    } on AuthException catch (err) {
-      if (mounted) {
+
+      await Supabase.instance.client.from('user_roles').upsert({
+        'user_id': user.id,
+        'role': _selectedCategory!.toLowerCase(),
+      }, onConflict: 'user_id');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => nextPage),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      String message = 'Registration failed: ';
+      if (e.toString().contains('already registered')) {
+        message += 'This email is already registered. Please login instead.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(err.message),
-            backgroundColor: AppTheme.errorColor,
+            content: Text(message),
+            action: SnackBarAction(
+              label: 'Login',
+              onPressed:
+                  () => Navigator.pushReplacementNamed(context, '/login'),
+            ),
           ),
         );
-      }
-    } catch (err) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $err'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message + e.toString())));
       }
     } finally {
       if (mounted) {
@@ -275,6 +254,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               ),
                             ),
                           ),
+
                         ),
                       ),
                       Expanded(
@@ -298,59 +278,60 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ),
                     ],
                   ),
-                ),
 
-                const SizedBox(height: 32),
+                  const SizedBox(height: 30),
 
-                // Full Name Field
-                TextFormField(
-                  controller: _nameController,
-                  validator:
-                      (v) => (v ?? '').isEmpty ? 'Enter your full name' : null,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    hintText: 'Enter your full name',
-                    prefixIcon: Icon(Icons.person_outline),
+                  // Name
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: _inputDecoration('Full Name', Icons.person),
+                    style: const TextStyle(color: Colors.white),
+                    validator:
+                        (v) => (v ?? '').isEmpty ? 'Enter your name' : null,
                   ),
-                ),
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 16),
-
-                // Email Field
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if ((v ?? '').isEmpty) return 'Enter your email';
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(v!)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Email Address',
-                    hintText: 'Enter your email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  // Email
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: _inputDecoration('Email', Icons.email),
+                    style: const TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if ((v ?? '').isEmpty) return 'Enter your email';
+                      final re = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                      return re.hasMatch(v!) ? null : 'Invalid email';
+                    },
                   ),
-                ),
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 16),
-
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  validator:
-                      (v) =>
-                          (v ?? '').length < 8
-                              ? 'Password must be at least 8 characters'
-                              : null,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    prefixIcon: Icon(Icons.lock_outline),
+                  // Password
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: _inputDecoration(
+                      'Password',
+                      Icons.lock,
+                    ).copyWith(
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.white54,
+                        ),
+                        onPressed:
+                            () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                      ),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    validator:
+                        (v) =>
+                            (v ?? '').length < 8
+                                ? 'Password min 8 chars'
+                                : null,
                   ),
                 ),
 

@@ -1,34 +1,22 @@
-// Enhanced FootballerProfilePage fetching latest profile data
-
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../widgets/navbar/bottom_navbar.dart';
-import '../widgets/profile_quick_button.dart';
-import '../widgets/fifa_player_card.dart';
-import '../screens/chat_page.dart';
-import 'dart:io';
-import '../models/footballer_profile_model.dart';
 
-class FootballerProfilePage extends StatefulWidget {
-  const FootballerProfilePage({Key? key}) : super(key: key);
+class UserProfilePage extends StatefulWidget {
+  const UserProfilePage({Key? key}) : super(key: key);
 
   @override
-  State<FootballerProfilePage> createState() => _FootballerProfilePageState();
+  State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _FootballerProfilePageState extends State<FootballerProfilePage>
-    with TickerProviderStateMixin {
+class _UserProfilePageState extends State<UserProfilePage>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
-  FootballerProfileModel? _profile;
+  Map<String, dynamic>? _userProfile;
   String? _userRole;
   String? _error;
   late TabController _tabController;
   late AnimationController _headerAnimController;
   late Animation<double> _headerScale;
-  final List<String> _uploadedImages = [];
-  final ImagePicker _picker = ImagePicker();
-  int _selectedIndex = 3;
   List<Map<String, String>> _posts = [];
 
   @override
@@ -43,7 +31,7 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
       parent: _headerAnimController,
       curve: Curves.elasticOut,
     );
-    _fetchLatestProfile();
+    _loadUserProfile();
   }
 
   @override
@@ -53,90 +41,63 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
     super.dispose();
   }
 
-  Future<void> _fetchLatestProfile() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
-      setState(() => _isLoading = false);
-      return;
+  Future<void> _loadUserProfile() async {
+    if (!mounted) return;
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+        return;
+      }
+      final roleResponse =
+          await Supabase.instance.client
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', userId)
+              .maybeSingle();
+      if (roleResponse == null) {
+        setState(() {
+          _isLoading = false;
+          _error =
+              'No role found for this user. Please contact support or complete registration.';
+        });
+        return;
+      }
+      setState(() {
+        _userRole = roleResponse['role'];
+      });
+      final profileResponse =
+          await Supabase.instance.client
+              .from('${_userRole}_profiles')
+              .select()
+              .eq('user_id', userId)
+              .maybeSingle();
+      if (profileResponse == null) {
+        setState(() {
+          _isLoading = false;
+          _error = 'No profile found. Please complete your profile.';
+        });
+        return;
+      }
+      setState(() {
+        _userProfile = profileResponse;
+        _isLoading = false;
+        _error = null;
+        // Load posts if available
+        _posts = List<Map<String, String>>.from(_userProfile?['posts'] ?? []);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Error loading profile: $e';
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_error!)));
     }
-    final roleResponse =
-        await Supabase.instance.client
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .maybeSingle();
-    if (roleResponse == null || roleResponse['role'] == null) {
-      setState(() => _isLoading = false);
-      return;
-    }
-    final role = roleResponse['role'];
-    setState(() => _userRole = role);
-    final profileResponse =
-        await Supabase.instance.client
-            .from('${role}_profiles')
-            .select()
-            .eq('user_id', userId)
-            .maybeSingle();
-    setState(() {
-      _profile =
-          profileResponse != null
-              ? FootballerProfileModel.fromJson(profileResponse)
-              : null;
-      _isLoading = false;
-      _posts = List<Map<String, String>>.from(profileResponse?['posts'] ?? []);
-    });
-  }
-
-  int _calculateAge(DateTime dob) {
-    final now = DateTime.now();
-    int age = now.year - dob.year;
-    if (now.month < dob.month ||
-        (now.month == dob.month && now.day < dob.day)) {
-      age--;
-    }
-    return age;
-  }
-
-  Widget _buildExperienceBar(String level) {
-    final levels = ['Amateur', 'Semi-Pro', 'Pro'];
-    final idx = levels.indexOf(level);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(levels.length, (i) {
-        final isActive = i <= idx;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Column(
-            children: [
-              Icon(
-                Icons.sports_soccer,
-                color: isActive ? Colors.yellow : Colors.white24,
-                size: 28,
-              ),
-              Text(
-                levels[i],
-                style: TextStyle(
-                  color: isActive ? Colors.yellow : Colors.white54,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-    const routes = ['/', '/stories', '/news_reels', '/footballer_profile'];
-    if (index < routes.length) Navigator.pushNamed(context, routes[index]);
-  }
-
-  Future<void> _uploadImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) setState(() => _uploadedImages.add(image.path));
   }
 
   void _showAddPostDialog() {
@@ -200,54 +161,67 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
     );
   }
 
+  Future<void> _signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error signing out: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator()),
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _loadUserProfile,
+            ),
+            IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
+          ],
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_error!, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _loadUserProfile,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       );
     }
-    if (_profile == null) {
-      Future.microtask(() {
-        Navigator.pushReplacementNamed(context, '/login_required');
-      });
-      return const SizedBox.shrink();
-    }
-    final data = _profile!;
-    final name = data.fullName;
-    final image = data.profileImage ?? 'assets/images/player_avatar.jpeg';
-    final club = data.club ?? 'None';
-    final position = data.position;
-    final age = _calculateAge(data.dateOfBirth);
-    final experience = data.experience;
+    final profile = _userProfile!;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF222831),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF006847),
         elevation: 0,
-        title: const Text(
-          'Footballer Profile',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Profile', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.message, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (_) => ChatScreen(
-                        otherUserId: data.userId,
-                        otherUserName: name,
-                        otherUserImage: image,
-                      ),
-                ),
-              );
-            },
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadUserProfile,
           ),
+          IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
         ],
       ),
       body: Column(
@@ -275,33 +249,18 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
               ),
               child: Column(
                 children: [
-                  Stack(
-                    children: [
-                      Container(
-                        height: 120,
-                        decoration: const BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(
-                              'assets/images/football_field.jpeg',
-                            ),
-                            fit: BoxFit.cover,
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(24)),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        left: 16,
-                        child: CircleAvatar(
-                          radius: 40,
-                          backgroundImage: AssetImage(image),
-                        ),
-                      ),
-                    ],
+                  CircleAvatar(
+                    radius: 44,
+                    backgroundColor: Colors.yellow[700],
+                    child: Icon(
+                      Icons.person,
+                      size: 60,
+                      color: Colors.deepPurple[700],
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    name,
+                    profile['full_name'] ?? '',
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -312,17 +271,25 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _StatCard(label: 'Age', value: age.toString()),
+                      _StatCard(
+                        label: 'Goals',
+                        value: (profile['goals'] ?? '0').toString(),
+                      ),
                       const SizedBox(width: 24),
-                      _StatCard(label: 'Pos', value: position),
+                      _StatCard(
+                        label: 'Age',
+                        value: (profile['age'] ?? 'N/A').toString(),
+                      ),
+                      const SizedBox(width: 24),
+                      _StatCard(
+                        label: 'Pos',
+                        value: profile['position'] ?? 'N/A',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 18),
-                  // Experience Bar
-                  _buildExperienceBar(experience),
-                  const SizedBox(height: 18),
                   // Teams Played For
-                  if ((data.statistics?['teams'] ?? []).isNotEmpty) ...[
+                  if ((profile['teams'] ?? []).isNotEmpty) ...[
                     const Text(
                       'Teams Played For',
                       style: TextStyle(
@@ -335,13 +302,11 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                       height: 40,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: (data.statistics?['teams'] as List).length,
+                        itemCount: (profile['teams'] as List).length,
                         separatorBuilder: (_, __) => const SizedBox(width: 12),
                         itemBuilder:
                             (_, i) => CircleAvatar(
-                              backgroundImage: AssetImage(
-                                data.statistics?['teams'][i],
-                              ),
+                              backgroundImage: AssetImage(profile['teams'][i]),
                               radius: 18,
                               backgroundColor: Colors.white,
                             ),
@@ -377,7 +342,7 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                 // My Posts Tab
                 _PostsTab(posts: _posts),
                 // About Me Tab
-                _AboutTab(profile: data),
+                _AboutTab(about: profile['about'] ?? ''),
               ],
             ),
           ),
@@ -391,10 +356,6 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                 onPressed: _showAddPostDialog,
               )
               : null,
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ),
     );
   }
 }
@@ -464,70 +425,15 @@ class _PostsTab extends StatelessWidget {
 }
 
 class _AboutTab extends StatelessWidget {
-  final FootballerProfileModel profile;
-  const _AboutTab({required this.profile});
+  final String about;
+  const _AboutTab({required this.about});
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'About Me',
-            style: TextStyle(
-              color: Colors.yellow[700],
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (profile.bio != null && profile.bio!.isNotEmpty)
-            Text(
-              profile.bio!,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          const SizedBox(height: 16),
-          Text(
-            'Nationality: ${profile.nationality}',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          Text(
-            'Preferred Foot: ${profile.preferredFoot}',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          Text(
-            'Height: ${profile.height} cm',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          Text(
-            'Weight: ${profile.weight} kg',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          Text(
-            'Experience: ${profile.experience}',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          if (profile.skills.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text('Skills:', style: const TextStyle(color: Colors.white70)),
-            Wrap(
-              spacing: 8,
-              children:
-                  profile.skills
-                      .map(
-                        (s) => Chip(
-                          label: Text(
-                            s,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                          backgroundColor: Colors.yellow[700],
-                        ),
-                      )
-                      .toList(),
-            ),
-          ],
-        ],
+      child: Text(
+        about,
+        style: const TextStyle(color: Colors.white, fontSize: 16),
       ),
     );
   }

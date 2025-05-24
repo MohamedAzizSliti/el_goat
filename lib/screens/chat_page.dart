@@ -113,7 +113,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _onNav(int idx) {
     setState(() => _navIndex = idx);
-    const routes = ['/', '/stories', '/news_home', '/profile'];
+    const routes = ['/', '/stories', '/news_home', '/footballer_profile'];
     Navigator.pushNamed(context, routes[idx]);
   }
 

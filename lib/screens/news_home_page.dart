@@ -45,7 +45,7 @@ class _NewsHomePageState extends State<NewsHomePage>
         // Stay on NewsHomePage
         break;
       case 3:
-        Navigator.pushNamed(context, '/profile');
+        Navigator.pushNamed(context, '/footballer_profile');
         break;
     }
   }
@@ -89,9 +89,10 @@ class _NewsHomePageState extends State<NewsHomePage>
           const Text(
             "El Goat News",
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 197, 194, 194)),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 197, 194, 194),
+            ),
           ),
           Row(
             children: [
