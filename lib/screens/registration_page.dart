@@ -7,9 +7,11 @@ import '../models/user_model.dart';
 import 'clubsigup_page.dart';
 import 'scoutsignup_page.dart';
 import 'footballersignup_page.dart';
+import '../theme/app_theme.dart';
+
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({Key? key}) : super(key: key);
+  const RegistrationPage({super.key});
 
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();
@@ -22,6 +24,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _passwordController = TextEditingController();
   String? _selectedCategory;
   bool _isLoading = false;
+
   bool _obscurePassword = true;
 
   late final AuthService _authService;
@@ -58,11 +61,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
         role: _selectedCategory!,
       );
 
+
       if (user == null) {
         throw Exception('Failed to create user');
       }
 
       if (!mounted) return;
+
 
       // Navigate to role-specific form
       late Widget nextPage;
@@ -79,6 +84,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         default:
           throw Exception('Invalid category');
       }
+
       await Supabase.instance.client.from('user_roles').upsert({
         'user_id': user.id,
         'role': _selectedCategory!.toLowerCase(),
@@ -115,16 +121,52 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  InputDecoration _inputDecoration(String hint, IconData icon) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white54),
-      prefixIcon: Icon(icon, color: Colors.white54),
-      filled: true,
-      fillColor: Colors.grey[800],
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide.none,
+  Widget _buildRoleCard(
+    String role,
+    IconData icon,
+    String description,
+    Color color,
+  ) {
+    final isSelected = _selectedCategory == role;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCategory = role),
+      child: Container(
+        decoration: BoxDecoration(
+          color:
+              isSelected ? color.withValues(alpha: 0.1) : AppTheme.surfaceLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? color : AppTheme.borderLight,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected ? color : AppTheme.textSecondaryLight,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              role,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isSelected ? color : AppTheme.textPrimaryLight,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondaryLight,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -132,63 +174,111 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue, Colors.black],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Image.asset('assets/images/logo.png', height: 40, width: 40),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Welcome to',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  const Text(
-                    'GOAT',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 40),
+
+                // Logo and Title Section
+                Center(
+                  child: Column(
                     children: [
-                      GestureDetector(
-                        onTap:
-                            () => Navigator.pushReplacementNamed(
-                              context,
-                              '/login',
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
                             ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.sports_soccer,
+                          size: 40,
+                          color: Colors.white,
                         ),
                       ),
-                      const VerticalDivider(color: Colors.white),
-                      const Text(
-                        'Sign up',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Join El Goat',
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(width: 6),
-                      const CircleAvatar(
-                        radius: 4,
-                        backgroundColor: Colors.yellow,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Create your football community account',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.textSecondaryLight,
+                        ),
                       ),
                     ],
                   ),
+                ),
+
+                const SizedBox(height: 48),
+
+                // Login/Register Toggle
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.borderLight),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/login'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              'Login',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(
+                                color: AppTheme.textSecondaryLight,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Sign Up',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 30),
 
                   // Name
@@ -243,74 +333,124 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 ? 'Password min 8 chars'
                                 : null,
                   ),
-                  const SizedBox(height: 20),
+                ),
 
-                  // Category dropdown
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    dropdownColor: Colors.grey[800],
-                    value: _selectedCategory,
-                    hint: const Text(
-                      'Category',
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                    items:
-                        ['Footballer', 'Scout', 'Club']
-                            .map(
-                              (c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(
-                                  c,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: (v) => setState(() => _selectedCategory = v),
-                    validator: (v) => v == null ? 'Select category' : null,
+                const SizedBox(height: 32),
+
+                // Role Selection
+                Text(
+                  'Choose Your Role',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Select the role that best describes you in the football community',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.textSecondaryLight,
                   ),
-                  const SizedBox(height: 30),
+                ),
+                const SizedBox(height: 24),
 
-                  // Submit
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.yellow,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 50,
-                        vertical: 15,
+                // Role Selection Grid
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.1,
+                  children: [
+                    _buildRoleCard(
+                      'Footballer',
+                      Icons.sports_soccer,
+                      'Player seeking opportunities',
+                      AppTheme.primaryColor,
+                    ),
+                    _buildRoleCard(
+                      'Scout',
+                      Icons.search,
+                      'Talent evaluator',
+                      AppTheme.secondaryColor,
+                    ),
+                    _buildRoleCard(
+                      'Club',
+                      Icons.business,
+                      'Team organization',
+                      AppTheme.accentColor,
+                    ),
+                    _buildRoleCard(
+                      'Fan',
+                      Icons.favorite,
+                      'Football enthusiast',
+                      AppTheme.errorColor,
+                    ),
+                  ],
+                ),
+
+                if (_selectedCategory == null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Please select your role',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.errorColor,
                       ),
                     ),
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.black,
-                              ),
-                            )
-                            : const Text(
-                              'Sign up',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
+                  ),
+
+                const SizedBox(height: 32),
+
+                // Sign Up Button
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
                               ),
                             ),
+                          )
+                          : const Text('Create Account'),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Terms and Privacy
+                Text(
+                  'By creating an account, you agree to our Terms of Service and Privacy Policy',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondaryLight,
                   ),
-                  const SizedBox(height: 20),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Already have account
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/login'),
+                      child: const Text('Sign In'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

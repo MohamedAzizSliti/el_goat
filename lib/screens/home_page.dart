@@ -2,16 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
+import '../theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  static const Color _accent = Color(0xFFFFD600);
   int _selectedIndex = 0;
 
   bool get isUserConnected => Supabase.instance.client.auth.currentUser != null;
@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
       // Profile tab
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
-        Navigator.pushNamed(context, '/login_required');
+        if (mounted) Navigator.pushNamed(context, '/login_required');
         return;
       }
 
@@ -34,6 +34,9 @@ class _HomePageState extends State<HomePage> {
               .select('role')
               .eq('user_id', userId)
               .maybeSingle();
+
+      if (!mounted) return;
+
 
       if (roleResponse == null || roleResponse['role'] == null) {
         Navigator.pushNamed(context, '/login_required');
@@ -102,6 +105,7 @@ class _HomePageState extends State<HomePage> {
                 'Profile',
                 style: TextStyle(color: Colors.white),
               ),
+
               onTap:
                   () => Navigator.pushReplacementNamed(
                     context,
@@ -138,6 +142,7 @@ class _HomePageState extends State<HomePage> {
                 // Your logo
                 Image.asset('assets/images/logo.png', height: 40),
                 const Spacer(),
+
                 if (!isUserConnected) ...[
                   TextButton(
                     onPressed: () => Navigator.pushNamed(context, '/login'),
@@ -211,7 +216,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Explore Stories',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -258,7 +263,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Join as',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -304,7 +309,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Featured Players',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -324,6 +329,7 @@ class _HomePageState extends State<HomePage> {
                               onTap:
                                   () => Navigator.pushNamed(
                                     context,
+
                                     '/footballer_profile',
                                     arguments: {'id': '$i'},
                                   ),
@@ -345,7 +351,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Latest News',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -393,11 +399,11 @@ class _RoleCard extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   const _RoleCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
