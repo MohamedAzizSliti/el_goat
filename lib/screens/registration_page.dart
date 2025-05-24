@@ -5,23 +5,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'clubsigup_page.dart';
 import 'scoutsignup_page.dart';
 import 'footballersignup_page.dart';
-import '../widgets/navbar/bottom_navbar.dart';
+import '../theme/app_theme.dart';
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({Key? key}) : super(key: key);
+  const RegistrationPage({super.key});
 
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  final _formKey           = GlobalKey<FormState>();
-  final _nameController    = TextEditingController();
-  final _emailController   = TextEditingController();
-  final _passwordController= TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   String? _selectedCategory;
-  bool   _isLoading        = false;
-  int    _navIndex         = 0;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -29,14 +28,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _onNavTapped(int index) {
-    setState(() => _navIndex = index);
-    const routes = ['/', '/stories', '/news_home', '/profile'];
-    if (index < routes.length) {
-      Navigator.pushNamed(context, routes[index]);
-    }
   }
 
   Future<void> _submitForm() async {
@@ -64,14 +55,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
       // 2️⃣ Insert base profile in the correct table
       final tableName = '${_selectedCategory!.toLowerCase()}_profiles';
-      final insertResp = await supabase
-          .from(tableName)
-          .insert({
+      final insertResp =
+          await supabase.from(tableName).insert({
             'user_id': userId,
             'full_name': _nameController.text.trim(),
             'created_at': DateTime.now().toIso8601String(),
-          })
-          .select();
+          }).select();
 
       if (insertResp.isEmpty) {
         throw Exception('Profile insert failed.');
@@ -83,47 +72,122 @@ class _RegistrationPageState extends State<RegistrationPage> {
         'role': _selectedCategory!.toLowerCase(),
       });
 
-      // 4️⃣ Navigate to the role-specific sign-up form
-      late Widget nextPage;
+      // 4️⃣ Navigate to the role-specific sign-up form or complete registration for Fan
       switch (_selectedCategory!.toLowerCase()) {
         case 'footballer':
-          nextPage = FootballerSignUpPage(userId: userId);
+          final nextPage = FootballerSignUpPage(userId: userId);
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => nextPage),
+            );
+          }
           break;
         case 'scout':
-          nextPage = ScoutSignUpPage(userId: userId);
+          final nextPage = ScoutSignUpPage(userId: userId);
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => nextPage),
+            );
+          }
           break;
         case 'club':
-          nextPage = ClubSignUpPage(userId: userId);
+          final nextPage = ClubSignUpPage(userId: userId);
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => nextPage),
+            );
+          }
+          break;
+        case 'fan':
+          // For fans, complete registration here and redirect to home
+          await supabase.from('profiles').insert({
+            'id': userId,
+            'full_name': _nameController.text.trim(),
+            'role': 'fan',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/');
+          }
           break;
         default:
           throw Exception('Unknown category');
       }
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => nextPage),
-      );
     } on AuthException catch (err) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(err.message)));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err.message),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     } catch (err) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $err')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $err'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  InputDecoration _inputDecoration(String hint, IconData icon) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white54),
-      prefixIcon: Icon(icon, color: Colors.white54),
-      filled: true,
-      fillColor: Colors.grey[800],
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide.none,
+  Widget _buildRoleCard(
+    String role,
+    IconData icon,
+    String description,
+    Color color,
+  ) {
+    final isSelected = _selectedCategory == role;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCategory = role),
+      child: Container(
+        decoration: BoxDecoration(
+          color:
+              isSelected ? color.withValues(alpha: 0.1) : AppTheme.surfaceLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? color : AppTheme.borderLight,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected ? color : AppTheme.textSecondaryLight,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              role,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isSelected ? color : AppTheme.textPrimaryLight,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondaryLight,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -131,155 +195,285 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue, Colors.black],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Image.asset('assets/images/logo.png', height: 40, width: 40),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Welcome to',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  const Text(
-                    'GOAT',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 40),
+
+                // Logo and Title Section
+                Center(
+                  child: Column(
                     children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/login'),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.sports_soccer,
+                          size: 40,
+                          color: Colors.white,
                         ),
                       ),
-                      const VerticalDivider(color: Colors.white),
-                      const Text(
-                        'Sign up',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Join El Goat',
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(width: 6),
-                      const CircleAvatar(
-                        radius: 4,
-                        backgroundColor: Colors.yellow,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Create your football community account',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.textSecondaryLight,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                ),
 
-                  // Name
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: _inputDecoration('Full Name', Icons.person),
-                    style: const TextStyle(color: Colors.white),
-                    validator: (v) =>
-                        (v ?? '').isEmpty ? 'Enter your name' : null,
+                const SizedBox(height: 48),
+
+                // Login/Register Toggle
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.borderLight),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Email
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: _inputDecoration('Email', Icons.email),
-                    style: const TextStyle(color: Colors.white),
-                    validator: (v) {
-                      if ((v ?? '').isEmpty) return 'Enter your email';
-                      final re = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                      return re.hasMatch(v!) ? null : 'Invalid email';
-                    },
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/login'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              'Login',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.copyWith(
+                                color: AppTheme.textSecondaryLight,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Sign Up',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                ),
 
-                  // Password
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: _inputDecoration('Password', Icons.lock),
-                    style: const TextStyle(color: Colors.white),
-                    validator: (v) =>
-                        (v ?? '').length < 8 ? 'Password min 8 chars' : null,
+                const SizedBox(height: 32),
+
+                // Full Name Field
+                TextFormField(
+                  controller: _nameController,
+                  validator:
+                      (v) => (v ?? '').isEmpty ? 'Enter your full name' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    hintText: 'Enter your full name',
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
-                  const SizedBox(height: 20),
+                ),
 
-                  // Category dropdown
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
+                const SizedBox(height: 16),
+
+                // Email Field
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if ((v ?? '').isEmpty) return 'Enter your email';
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(v!)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Email Address',
+                    hintText: 'Enter your email',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Password Field
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  validator:
+                      (v) =>
+                          (v ?? '').length < 8
+                              ? 'Password must be at least 8 characters'
+                              : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    hintText: 'Enter your password',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Role Selection
+                Text(
+                  'Choose Your Role',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Select the role that best describes you in the football community',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.textSecondaryLight,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Role Selection Grid
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.1,
+                  children: [
+                    _buildRoleCard(
+                      'Footballer',
+                      Icons.sports_soccer,
+                      'Player seeking opportunities',
+                      AppTheme.primaryColor,
+                    ),
+                    _buildRoleCard(
+                      'Scout',
+                      Icons.search,
+                      'Talent evaluator',
+                      AppTheme.secondaryColor,
+                    ),
+                    _buildRoleCard(
+                      'Club',
+                      Icons.business,
+                      'Team organization',
+                      AppTheme.accentColor,
+                    ),
+                    _buildRoleCard(
+                      'Fan',
+                      Icons.favorite,
+                      'Football enthusiast',
+                      AppTheme.errorColor,
+                    ),
+                  ],
+                ),
+
+                if (_selectedCategory == null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Please select your role',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.errorColor,
                       ),
                     ),
-                    dropdownColor: Colors.grey[800],
-                    value: _selectedCategory,
-                    hint: const Text(
-                      'Category',
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                    items: ['Footballer', 'Scout', 'Club']
-                        .map((c) => DropdownMenuItem(
-                              value: c,
-                              child: Text(c,
-                                  style: const TextStyle(color: Colors.white)),
-                            ))
-                        .toList(),
-                    onChanged: (v) => setState(() => _selectedCategory = v),
-                    validator: (v) => v == null ? 'Select category' : null,
                   ),
-                  const SizedBox(height: 30),
 
-                  // Submit
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.yellow,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 15),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child:
-                                CircularProgressIndicator(color: Colors.black),
-                          )
-                        : const Text(
-                            'Sign up',
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 18),
-                          ),
+                const SizedBox(height: 32),
+
+                // Sign Up Button
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  const SizedBox(height: 20),
-                ],
-              ),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : const Text('Create Account'),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Terms and Privacy
+                Text(
+                  'By creating an account, you agree to our Terms of Service and Privacy Policy',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondaryLight,
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Already have account
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/login'),
+                      child: const Text('Sign In'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar:
-          BottomNavbar(selectedIndex: _navIndex, onItemTapped: _onNavTapped),
     );
   }
 }

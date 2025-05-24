@@ -2,34 +2,38 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
+import '../theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  static const Color _accent = Color(0xFFFFD600);
   int _selectedIndex = 0;
 
   void _onNavTapped(int idx) async {
     setState(() => _selectedIndex = idx);
 
-    if (idx == 3) { // Profile tab
+    if (idx == 3) {
+      // Profile tab
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
-        Navigator.pushNamed(context, '/login_required');
+        if (mounted) Navigator.pushNamed(context, '/login_required');
         return;
       }
 
       // Fetch the user's role
-      final roleResponse = await Supabase.instance.client
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .maybeSingle();
+      final roleResponse =
+          await Supabase.instance.client
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', userId)
+              .maybeSingle();
+
+      if (!mounted) return;
 
       if (roleResponse == null || roleResponse['role'] == null) {
         Navigator.pushNamed(context, '/login_required');
@@ -68,7 +72,10 @@ class _HomePageState extends State<HomePage> {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(color: Colors.black87),
-              child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+              child: Text(
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.home, color: Colors.white),
@@ -77,17 +84,24 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: const Icon(Icons.book, color: Colors.white),
-              title: const Text('Stories', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Stories',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () => Navigator.pushReplacementNamed(context, '/stories'),
             ),
             ListTile(
               leading: const Icon(Icons.article, color: Colors.white),
               title: const Text('News', style: TextStyle(color: Colors.white)),
-              onTap: () => Navigator.pushReplacementNamed(context, '/news_home'),
+              onTap:
+                  () => Navigator.pushReplacementNamed(context, '/news_home'),
             ),
             ListTile(
               leading: const Icon(Icons.person, color: Colors.white),
-              title: const Text('Profile', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Profile',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () => Navigator.pushReplacementNamed(context, '/profile'),
             ),
           ],
@@ -97,10 +111,11 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.black,
         elevation: 0,
         leading: Builder(
-          builder: (ctx) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(ctx).openDrawer(),
-          ),
+          builder:
+              (ctx) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
+              ),
         ),
         actions: [
           IconButton(
@@ -121,19 +136,29 @@ class _HomePageState extends State<HomePage> {
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/login'),
-                  child: const Text('Login', style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/registration'),
+                  onPressed:
+                      () => Navigator.pushNamed(context, '/registration'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: AppTheme.accentColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                   ),
-                  child: const Text('Sign Up', style: TextStyle(color: Colors.black)),
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(color: Colors.black),
+                  ),
                 ),
               ],
             ),
@@ -151,7 +176,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Explore Stories',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -164,24 +189,30 @@ class _HomePageState extends State<HomePage> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: 5,
-                      itemBuilder: (_, i) => Container(
-                        margin: const EdgeInsets.only(right: 12),
-                        width: 80,
-                        child: Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 32,
-                              backgroundImage: AssetImage('assets/images/${i+1}.jpg'),
+                      itemBuilder:
+                          (_, i) => Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            width: 80,
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 32,
+                                  backgroundImage: AssetImage(
+                                    'assets/images/${i + 1}.jpg',
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Story ${i + 1}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Story ${i+1}',
-                              style: const TextStyle(color: Colors.white, fontSize: 12),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
                     ),
                   ),
 
@@ -192,7 +223,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Join as',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -206,19 +237,26 @@ class _HomePageState extends State<HomePage> {
                         _RoleCard(
                           icon: Icons.sports_soccer,
                           label: 'Footballer',
-                          onTap: () => Navigator.pushNamed(context, '/footballersignup'),
+                          onTap:
+                              () => Navigator.pushNamed(
+                                context,
+                                '/footballersignup',
+                              ),
                         ),
                         const SizedBox(width: 12),
                         _RoleCard(
                           icon: Icons.search,
                           label: 'Scout',
-                          onTap: () => Navigator.pushNamed(context, '/scoutsignup'),
+                          onTap:
+                              () =>
+                                  Navigator.pushNamed(context, '/scoutsignup'),
                         ),
                         const SizedBox(width: 12),
                         _RoleCard(
                           icon: Icons.business,
                           label: 'Club',
-                          onTap: () => Navigator.pushNamed(context, '/clubsigup'),
+                          onTap:
+                              () => Navigator.pushNamed(context, '/clubsigup'),
                         ),
                       ],
                     ),
@@ -231,7 +269,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Featured Players',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -244,17 +282,24 @@ class _HomePageState extends State<HomePage> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: 8,
-                      itemBuilder: (_, i) => Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: GestureDetector(
-                          onTap: () =>
-                              Navigator.pushNamed(context, '/profile', arguments: {'id': '$i'}),
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundImage: AssetImage('assets/images/player${i+1}.jpeg'),
+                      itemBuilder:
+                          (_, i) => Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: GestureDetector(
+                              onTap:
+                                  () => Navigator.pushNamed(
+                                    context,
+                                    '/profile',
+                                    arguments: {'id': '$i'},
+                                  ),
+                              child: CircleAvatar(
+                                radius: 40,
+                                backgroundImage: AssetImage(
+                                  'assets/images/player${i + 1}.jpeg',
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
                     ),
                   ),
 
@@ -265,7 +310,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Latest News',
                       style: TextStyle(
-                        color: _accent,
+                        color: AppTheme.primaryColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -274,14 +319,24 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 12),
                   ...List.generate(3, (i) {
                     return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                       leading: const Icon(Icons.article, color: Colors.white),
-                      title:
-                          Text('News Headline ${i+1}', style: const TextStyle(color: Colors.white)),
-                      subtitle: Text('Brief description…',
-                          style: TextStyle(color: Colors.grey[400])),
-                      onTap: () =>
-                          Navigator.pushNamed(context, '/news_detail', arguments: {'id': '$i'}),
+                      title: Text(
+                        'News Headline ${i + 1}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        'Brief description…',
+                        style: TextStyle(color: Colors.grey[400]),
+                      ),
+                      onTap:
+                          () => Navigator.pushNamed(
+                            context,
+                            '/news_detail',
+                            arguments: {'id': '$i'},
+                          ),
                     );
                   }),
                 ],
@@ -303,11 +358,11 @@ class _RoleCard extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   const _RoleCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
