@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 import 'home_page.dart';
+import 'search_page.dart';
 import 'stories_page.dart';
 import 'news_home_page.dart';
 import 'profile_page.dart';
@@ -65,7 +66,7 @@ class _MainNavigationState extends State<MainNavigation> {
         },
         children: [
           const HomePage(),
-          const StoriesPage(),
+          const SearchPage(),
           NewsHomePage(toggleTheme: () {}),
           const FootballerProfilePage(),
         ],

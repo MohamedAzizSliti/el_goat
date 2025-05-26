@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 import '../screens/chat_page.dart';
+import '../screens/ai_training_screen.dart';
 import '../models/footballer_profile_model.dart';
 
 class FootballerProfilePage extends StatefulWidget {
@@ -118,6 +119,44 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
       age--;
     }
     return age;
+  }
+
+  String _formatPlayerName(String fullName) {
+    // Replace underscores with spaces and capitalize each word
+    return fullName
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map(
+          (word) =>
+              word.isNotEmpty
+                  ? word[0].toUpperCase() + word.substring(1).toLowerCase()
+                  : word,
+        )
+        .join(' ');
+  }
+
+  String _formatExperienceLevel(String experience) {
+    // Handle common experience level formats
+    switch (experience.toLowerCase()) {
+      case 'beginner':
+      case 'amateur':
+        return 'Beginner';
+      case 'intermediate':
+      case 'semi-pro':
+        return 'Intermediate';
+      case 'advanced':
+      case 'professional':
+      case 'pro':
+        return 'Professional';
+      case 'unknown':
+      case '':
+        return 'Beginner'; // Default fallback
+      default:
+        return experience.isNotEmpty
+            ? experience[0].toUpperCase() +
+                experience.substring(1).toLowerCase()
+            : 'Beginner';
+    }
   }
 
   Widget _buildExperienceBar(String level) {
@@ -478,11 +517,11 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
       );
     }
     final data = _profile!;
-    final name = data.fullName;
+    final name = _formatPlayerName(data.fullName);
     final image = data.profileImage ?? 'assets/images/player_avatar.jpeg';
     final position = data.position;
     final age = _calculateAge(data.dateOfBirth);
-    final experience = data.experience;
+    final experience = _formatExperienceLevel(data.experience);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -769,14 +808,56 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
           ],
         ),
       ),
-      floatingActionButton:
-          _tabController.index == 0
-              ? FloatingActionButton(
-                backgroundColor: Colors.yellow,
-                onPressed: _showAddPostDialog,
-                child: const Icon(Icons.add, color: Colors.black),
-              )
-              : null,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // AI Training Button
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Colors.green[400]!, Colors.blue[400]!],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green[400]!.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: FloatingActionButton(
+              onPressed: () {
+                if (_profile != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AITrainingScreen(player: _profile!),
+                    ),
+                  );
+                }
+              },
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              heroTag: "ai_training",
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Add Post Button (only on Posts tab)
+          if (_tabController.index == 0)
+            FloatingActionButton(
+              backgroundColor: Colors.yellow[700],
+              onPressed: _showAddPostDialog,
+              heroTag: "add_post",
+              child: const Icon(Icons.add, color: Colors.black),
+            ),
+        ],
+      ),
       bottomNavigationBar: BottomNavbar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,

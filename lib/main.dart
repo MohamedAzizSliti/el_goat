@@ -21,6 +21,7 @@ import 'screens/favorites_page.dart';
 import 'screens/notifications_page.dart';
 import 'screens/ratings_page.dart';
 import 'screens/login_required_page.dart';
+import 'screens/search_page.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -78,6 +79,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const MainNavigation(),
         '/home': (context) => const HomePage(),
+        '/search': (context) => const SearchPage(),
         '/news_home': (ctx) => NewsHomePage(toggleTheme: () {}),
         '/stories': (ctx) => const StoriesPage(),
         '/news_reels': (ctx) => const NewsReelsPage(),

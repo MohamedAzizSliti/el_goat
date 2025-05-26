@@ -25,7 +25,7 @@ class BottomNavbar extends StatelessWidget {
             if (index == 0) {
               Navigator.pushNamed(context, '/'); // Navigate to Home
             } else if (index == 1) {
-              Navigator.pushNamed(context, '/stories'); // Navigate to Stories
+              Navigator.pushNamed(context, '/search'); // Navigate to Search
             } else if (index == 2) {
               Navigator.pushNamed(
                 context,
@@ -50,10 +50,7 @@ class BottomNavbar extends StatelessWidget {
           type: BottomNavigationBarType.fixed, // Fixed navigation bar
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.play_circle_outline),
-              label: 'Play',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
             BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'News'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
