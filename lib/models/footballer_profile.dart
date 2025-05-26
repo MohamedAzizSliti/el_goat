@@ -42,25 +42,26 @@ class FootballerProfile {
       userId: json['user_id'] as String,
       fullName: json['full_name'] as String,
       phone: json['phone'] as String?,
-      dateOfBirth: json['dob'] != null 
-          ? DateTime.parse(json['dob'] as String)
-          : null,
+      dateOfBirth:
+          json['dob'] != null ? DateTime.parse(json['dob'] as String) : null,
       position: json['position'] as String?,
       preferredFoot: json['preferred_foot'] as String?,
-      heightCm: json['height_cm'] as int?,
-      weightKg: json['weight_kg'] as int?,
+      heightCm: (json['height_cm'] as num?)?.toInt(),
+      weightKg: (json['weight_kg'] as num?)?.toInt(),
       experienceLevel: json['experience_level'] as String?,
       currentClub: json['current_club'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       bio: json['bio'] as String?,
-      xpPoints: json['xp_points'] as int? ?? 0,
+      xpPoints: (json['xp_points'] as num?)?.toInt() ?? 0,
       isVerified: json['is_verified'] as bool? ?? false,
-      lastSeen: json['last_seen'] != null 
-          ? DateTime.parse(json['last_seen'] as String)
-          : null,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      lastSeen:
+          json['last_seen'] != null
+              ? DateTime.parse(json['last_seen'] as String)
+              : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : null,
     );
   }
 
@@ -89,16 +90,17 @@ class FootballerProfile {
     if (dateOfBirth == null) return 0;
     final now = DateTime.now();
     int age = now.year - dateOfBirth!.year;
-    if (now.month < dateOfBirth!.month || 
+    if (now.month < dateOfBirth!.month ||
         (now.month == dateOfBirth!.month && now.day < dateOfBirth!.day)) {
       age--;
     }
     return age;
   }
 
-  String get displayClub => currentClub?.isEmpty == true ? 'Free Agent' : currentClub ?? 'Free Agent';
-  
+  String get displayClub =>
+      currentClub?.isEmpty == true ? 'Free Agent' : currentClub ?? 'Free Agent';
+
   String get experienceDisplay => experienceLevel ?? 'Not specified';
-  
+
   String get positionDisplay => position ?? 'Not specified';
 }

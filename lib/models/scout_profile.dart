@@ -41,20 +41,23 @@ class ScoutProfile {
       country: json['country'] as String?,
       city: json['city'] as String?,
       scoutingLevel: json['scouting_level'] as String?,
-      yearsExperience: json['years_experience'] as int? ?? 0,
+      yearsExperience: (json['years_experience'] as num?)?.toInt() ?? 0,
       bio: json['bio'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       organization: json['organization'] as String?,
-      specializations: json['specializations'] != null 
-          ? List<String>.from(json['specializations'] as List)
-          : [],
+      specializations:
+          json['specializations'] != null
+              ? List<String>.from(json['specializations'] as List)
+              : [],
       isVerified: json['is_verified'] as bool? ?? false,
-      lastSeen: json['last_seen'] != null 
-          ? DateTime.parse(json['last_seen'] as String)
-          : null,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      lastSeen:
+          json['last_seen'] != null
+              ? DateTime.parse(json['last_seen'] as String)
+              : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : null,
     );
   }
 

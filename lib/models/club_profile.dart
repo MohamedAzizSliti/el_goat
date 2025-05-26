@@ -46,16 +46,18 @@ class ClubProfile {
       logoUrl: json['logo_url'] as String?,
       league: json['league'] as String?,
       division: json['division'] as String?,
-      foundedYear: json['founded_year'] as int?,
+      foundedYear: (json['founded_year'] as num?)?.toInt(),
       stadium: json['stadium'] as String?,
-      capacity: json['capacity'] as int?,
-      achievements: json['achievements'] != null 
-          ? List<String>.from(json['achievements'] as List)
-          : [],
+      capacity: (json['capacity'] as num?)?.toInt(),
+      achievements:
+          json['achievements'] != null
+              ? List<String>.from(json['achievements'] as List)
+              : [],
       isVerified: json['is_verified'] as bool? ?? false,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : null,
     );
   }
 
