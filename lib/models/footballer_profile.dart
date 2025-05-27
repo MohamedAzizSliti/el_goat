@@ -5,6 +5,7 @@ class FootballerProfile {
   final String fullName;
   final String? phone;
   final DateTime? dateOfBirth;
+  final String? nationality;
   final String? position;
   final String? preferredFoot;
   final int? heightCm;
@@ -23,6 +24,7 @@ class FootballerProfile {
     required this.fullName,
     this.phone,
     this.dateOfBirth,
+    this.nationality,
     this.position,
     this.preferredFoot,
     this.heightCm,
@@ -44,6 +46,7 @@ class FootballerProfile {
       phone: json['phone'] as String?,
       dateOfBirth:
           json['dob'] != null ? DateTime.parse(json['dob'] as String) : null,
+      nationality: json['nationality'] as String?,
       position: json['position'] as String?,
       preferredFoot: json['preferred_foot'] as String?,
       heightCm: (json['height_cm'] as num?)?.toInt(),
@@ -71,6 +74,7 @@ class FootballerProfile {
       'full_name': fullName,
       'phone': phone,
       'dob': dateOfBirth?.toIso8601String().split('T')[0],
+      'nationality': nationality,
       'position': position,
       'preferred_foot': preferredFoot,
       'height_cm': heightCm,
@@ -103,4 +107,6 @@ class FootballerProfile {
   String get experienceDisplay => experienceLevel ?? 'Not specified';
 
   String get positionDisplay => position ?? 'Not specified';
+
+  String get nationalityDisplay => nationality ?? 'Not specified';
 }

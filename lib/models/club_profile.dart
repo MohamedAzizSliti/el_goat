@@ -5,6 +5,7 @@ class ClubProfile {
   final String clubName;
   final String? email;
   final String? location;
+  final String? country;
   final String? website;
   final String? description;
   final String? logoUrl;
@@ -22,6 +23,7 @@ class ClubProfile {
     required this.clubName,
     this.email,
     this.location,
+    this.country,
     this.website,
     this.description,
     this.logoUrl,
@@ -41,6 +43,7 @@ class ClubProfile {
       clubName: json['club_name'] as String,
       email: json['email'] as String?,
       location: json['location'] as String?,
+      country: json['country'] as String?,
       website: json['website'] as String?,
       description: json['description'] as String?,
       logoUrl: json['logo_url'] as String?,
@@ -67,6 +70,7 @@ class ClubProfile {
       'club_name': clubName,
       'email': email,
       'location': location,
+      'country': country,
       'website': website,
       'description': description,
       'logo_url': logoUrl,
@@ -103,4 +107,6 @@ class ClubProfile {
     }
     return 'Stadium not specified';
   }
+
+  String get countryDisplay => country ?? 'Country not specified';
 }

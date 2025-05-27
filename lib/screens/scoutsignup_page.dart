@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'success_page.dart';
+import '../widgets/country_selector.dart';
 
 class ScoutSignUpPage extends StatefulWidget {
   final String userId;
@@ -27,7 +28,6 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
   String? _selectedCountry;
   String? _selectedScoutingLevel;
 
-  final List<String> _countries = ['Tunisia', 'Algeria', 'Morocco'];
   final List<String> _scoutingLevels = ['Local', 'National', 'International'];
 
   @override
@@ -58,9 +58,7 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
         'last_seen': DateTime.now().toIso8601String(),
       };
 
-      await _supabase
-          .from('scout_profiles')
-          .insert(profile);
+      await _supabase.from('scout_profiles').insert(profile);
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -71,7 +69,10 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${error.toString()}'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: ${error.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
         debugPrint('Supabase error: $error');
       }
@@ -83,39 +84,56 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
   }
 
   Widget _buildLabel(String text) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 4),
-        child: Text(text, style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500)),
-      );
+    padding: const EdgeInsets.only(top: 12, bottom: 4),
+    child: Text(
+      text,
+      style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500),
+    ),
+  );
 
-  Widget _buildTextField(String hint, TextEditingController controller, {TextInputType keyboard = TextInputType.text, String? Function(String?)? validator}) =>
-      TextFormField(
-        controller: controller,
-        style: const TextStyle(color: Colors.white),
-        keyboardType: keyboard,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
+  Widget _buildTextField(
+    String hint,
+    TextEditingController controller, {
+    TextInputType keyboard = TextInputType.text,
+    String? Function(String?)? validator,
+  }) => TextFormField(
+    controller: controller,
+    style: const TextStyle(color: Colors.white),
+    keyboardType: keyboard,
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.grey[800],
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.grey),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
+  );
 
-  Widget _buildDropdown(List<String> items, String? value, void Function(String?) onChanged) =>
-      DropdownButtonFormField<String>(
-        value: value,
-        dropdownColor: Colors.grey[900],
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
-        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
+  Widget _buildDropdown(
+    List<String> items,
+    String? value,
+    void Function(String?) onChanged,
+  ) => DropdownButtonFormField<String>(
+    value: value,
+    dropdownColor: Colors.grey[900],
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.grey[800],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    items:
+        items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+    onChanged: onChanged,
+    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +161,11 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                   const Center(
                     child: Text(
                       'Complete Scout Profile',
-                      style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -163,11 +185,23 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     },
                   ),
                   _buildLabel('Country'),
-                  _buildDropdown(_countries, _selectedCountry, (val) => setState(() => _selectedCountry = val)),
+                  CountrySelector(
+                    selectedCountry: _selectedCountry,
+                    onCountrySelected: (country) {
+                      setState(() => _selectedCountry = country);
+                    },
+                    showFlags: true,
+                    showPopularFirst: true,
+                    hintText: 'Select your country',
+                  ),
                   _buildLabel('City'),
                   _buildTextField('Enter your city', _cityCtrl),
                   _buildLabel('Scouting Level'),
-                  _buildDropdown(_scoutingLevels, _selectedScoutingLevel, (val) => setState(() => _selectedScoutingLevel = val)),
+                  _buildDropdown(
+                    _scoutingLevels,
+                    _selectedScoutingLevel,
+                    (val) => setState(() => _selectedScoutingLevel = val),
+                  ),
                   _buildLabel('Years of Experience'),
                   _buildTextField(
                     'Enter years',
@@ -189,9 +223,11 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey[800],
-                      hintText: 'Write a short bio...'
+                      hintText: 'Write a short bio...',
                     ),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    validator:
+                        (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
                   const SizedBox(height: 30),
                   SizedBox(
@@ -205,9 +241,18 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: _isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Save & Continue', style: TextStyle(color: Colors.white, fontSize: 18)),
+                      child:
+                          _isSaving
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text(
+                                'Save & Continue',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              ),
                     ),
                   ),
                 ],

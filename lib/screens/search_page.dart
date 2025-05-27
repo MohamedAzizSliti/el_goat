@@ -5,7 +5,9 @@ import '../models/scout_profile.dart';
 import '../models/club_profile.dart';
 import '../services/profile_service.dart';
 import '../widgets/navbar/bottom_navbar.dart';
+import '../widgets/country_selector.dart';
 import '../screens/profile_view_page.dart';
+import '../utils/countries.dart';
 
 enum UserType { footballer, scout, club }
 
@@ -272,6 +274,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, '/countries'),
+        backgroundColor: Colors.yellow[400],
+        foregroundColor: Colors.black,
+        icon: const Icon(Icons.public),
+        label: const Text('Countries'),
+      ),
       bottomNavigationBar: BottomNavbar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
@@ -463,12 +472,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           (value) => setState(() => _scoutFilters['scouting_level'] = value),
         ),
         const SizedBox(height: 16),
-        _buildFilterDropdown(
-          'Country',
-          _scoutFilters['country'],
-          ['Tunisia', 'France', 'Spain', 'Italy', 'Germany', 'England'],
-          (value) => setState(() => _scoutFilters['country'] = value),
-        ),
+        _buildCountryFilter(),
       ],
     );
   }
@@ -598,6 +602,43 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   void _applyFilters() {
     _performSearch();
+  }
+
+  Widget _buildCountryFilter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'Country',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, '/countries'),
+              child: Text(
+                'View All Countries',
+                style: TextStyle(color: Colors.yellow[400], fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        CountrySelector(
+          selectedCountry: _scoutFilters['country'],
+          onCountrySelected: (country) {
+            setState(() => _scoutFilters['country'] = country);
+          },
+          showFlags: true,
+          showPopularFirst: true,
+          hintText: 'Select Country',
+        ),
+      ],
+    );
   }
 
   Widget _buildFootballersTab() {

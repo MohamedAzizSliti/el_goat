@@ -22,6 +22,7 @@ import 'screens/notifications_page.dart';
 import 'screens/ratings_page.dart';
 import 'screens/login_required_page.dart';
 import 'screens/search_page.dart';
+import 'screens/countries_list_page.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const MainNavigation(),
         '/home': (context) => const HomePage(),
         '/search': (context) => const SearchPage(),
+        '/countries': (context) => const CountriesListPage(),
         '/news_home': (ctx) => NewsHomePage(toggleTheme: () {}),
         '/stories': (ctx) => const StoriesPage(),
         '/news_reels': (ctx) => const NewsReelsPage(),
