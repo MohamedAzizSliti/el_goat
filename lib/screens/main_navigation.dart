@@ -3,11 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
+import '../widgets/dynamic_profile_widget.dart';
 import 'home_page.dart';
 import 'search_page.dart';
-import 'stories_page.dart';
 import 'news_home_page.dart';
-import 'profile_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -68,7 +67,7 @@ class _MainNavigationState extends State<MainNavigation> {
           const HomePage(),
           const SearchPage(),
           NewsHomePage(toggleTheme: () {}),
-          const FootballerProfilePage(),
+          const ProfileRouterWidget(),
         ],
       ),
       bottomNavigationBar: BottomNavbar(

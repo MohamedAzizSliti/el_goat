@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/profile_navigation_service.dart';
 
 class BottomNavbar extends StatelessWidget {
   final int selectedIndex;
@@ -32,10 +33,8 @@ class BottomNavbar extends StatelessWidget {
                 '/news_reels',
               ); // Navigate to News Reels
             } else if (index == 3) {
-              Navigator.pushNamed(
-                context,
-                '/footballer_profile',
-              ); // Navigate to Profile
+              // Navigate to user's profile based on their role
+              ProfileNavigationService.navigateToUserProfile(context);
             }
           },
           backgroundColor:

@@ -62,8 +62,15 @@ class _ClubProfilePageState extends State<ClubProfilePage> {
 
   void _onNav(int idx) {
     setState(() => _selectedIndex = idx);
-    const routes = ['/', '/stories', '/news_home', '/footballer_profile'];
-    Navigator.pushNamed(context, routes[idx]);
+    if (idx == 3) {
+      // Use dynamic profile navigation for profile tab
+      Navigator.pushNamed(context, '/club_profile');
+    } else {
+      const routes = ['/', '/stories', '/news_home', ''];
+      if (routes[idx].isNotEmpty) {
+        Navigator.pushNamed(context, routes[idx]);
+      }
+    }
   }
 
   @override

@@ -1,112 +1,68 @@
 // lib/models/club_profile.dart
 
 class ClubProfile {
+  final String id;
   final String userId;
   final String clubName;
-  final String? email;
   final String? location;
-  final String? country;
   final String? website;
   final String? description;
-  final String? logoUrl;
-  final String? league;
-  final String? division;
-  final int? foundedYear;
-  final String? stadium;
-  final int? capacity;
-  final List<String> achievements;
-  final bool isVerified;
   final DateTime? createdAt;
+  final DateTime? lastSeen;
 
   ClubProfile({
+    required this.id,
     required this.userId,
     required this.clubName,
-    this.email,
     this.location,
-    this.country,
     this.website,
     this.description,
-    this.logoUrl,
-    this.league,
-    this.division,
-    this.foundedYear,
-    this.stadium,
-    this.capacity,
-    this.achievements = const [],
-    this.isVerified = false,
     this.createdAt,
+    this.lastSeen,
   });
 
   factory ClubProfile.fromJson(Map<String, dynamic> json) {
     return ClubProfile(
+      id: json['id'] as String,
       userId: json['user_id'] as String,
       clubName: json['club_name'] as String,
-      email: json['email'] as String?,
       location: json['location'] as String?,
-      country: json['country'] as String?,
       website: json['website'] as String?,
       description: json['description'] as String?,
-      logoUrl: json['logo_url'] as String?,
-      league: json['league'] as String?,
-      division: json['division'] as String?,
-      foundedYear: (json['founded_year'] as num?)?.toInt(),
-      stadium: json['stadium'] as String?,
-      capacity: (json['capacity'] as num?)?.toInt(),
-      achievements:
-          json['achievements'] != null
-              ? List<String>.from(json['achievements'] as List)
-              : [],
-      isVerified: json['is_verified'] as bool? ?? false,
       createdAt:
           json['created_at'] != null
               ? DateTime.parse(json['created_at'] as String)
+              : null,
+      lastSeen:
+          json['last_seen'] != null
+              ? DateTime.parse(json['last_seen'] as String)
               : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'user_id': userId,
       'club_name': clubName,
-      'email': email,
       'location': location,
-      'country': country,
       'website': website,
       'description': description,
-      'logo_url': logoUrl,
-      'league': league,
-      'division': division,
-      'founded_year': foundedYear,
-      'stadium': stadium,
-      'capacity': capacity,
-      'achievements': achievements,
-      'is_verified': isVerified,
       'created_at': createdAt?.toIso8601String(),
+      'last_seen': lastSeen?.toIso8601String(),
     };
   }
 
-  String get foundedDisplay {
-    if (foundedYear == null) return 'Founded year not specified';
-    return 'Founded in $foundedYear';
-  }
+  String get locationDisplay => location ?? 'Location not specified';
 
-  String get leagueDisplay {
-    if (league != null && division != null) {
-      return '$league - $division';
-    } else if (league != null) {
-      return league!;
-    }
-    return 'League not specified';
-  }
+  // Compatibility getters for existing UI code
+  String get leagueDisplay => 'League not specified';
+  String get foundedDisplay => 'Founded year not specified';
+  String get stadiumDisplay => 'Stadium not specified';
+  String get countryDisplay => 'Country not specified';
 
-  String get stadiumDisplay {
-    if (stadium != null && capacity != null) {
-      return '$stadium (${capacity!.toString()} capacity)';
-    } else if (stadium != null) {
-      return stadium!;
-    }
-    return 'Stadium not specified';
-  }
-
-  String get countryDisplay => country ?? 'Country not specified';
+  // Compatibility properties for existing UI code
+  String? get logoUrl => null;
+  bool get isVerified => false;
+  List<String> get achievements => [];
 }

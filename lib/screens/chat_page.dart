@@ -10,6 +10,7 @@ import 'package:mime/mime.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import '../services/message_service.dart';
+import '../services/profile_navigation_service.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -113,8 +114,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _onNav(int idx) {
     setState(() => _navIndex = idx);
-    const routes = ['/', '/stories', '/news_home', '/footballer_profile'];
-    Navigator.pushNamed(context, routes[idx]);
+    if (idx == 3) {
+      // Use dynamic profile navigation for profile tab
+      ProfileNavigationService.navigateToUserProfile(context);
+    } else {
+      const routes = ['/', '/stories', '/news_home', ''];
+      if (routes[idx].isNotEmpty) {
+        Navigator.pushNamed(context, routes[idx]);
+      }
+    }
   }
 
   void _scrollToBottom() {
