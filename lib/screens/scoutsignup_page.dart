@@ -19,7 +19,6 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
   bool _isSaving = false;
   final _supabase = Supabase.instance.client;
 
-  final _fullNameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _experienceYearsCtrl = TextEditingController();
@@ -28,16 +27,38 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
   String? _selectedCountry;
   String? _selectedScoutingLevel;
 
+  String? _userEmail;
+  String? _userFullName;
+
   final List<String> _scoutingLevels = ['Local', 'National', 'International'];
 
   @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  @override
   void dispose() {
-    _fullNameCtrl.dispose();
     _phoneCtrl.dispose();
     _cityCtrl.dispose();
     _experienceYearsCtrl.dispose();
     _bioCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        setState(() {
+          _userEmail = user.email;
+          _userFullName = user.userMetadata?['full_name'] ?? '';
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
+    }
   }
 
   Future<void> _saveProfile() async {
@@ -48,12 +69,13 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
     try {
       final profile = {
         'user_id': widget.userId,
-        'full_name': _fullNameCtrl.text.trim(),
+        'full_name': _userFullName ?? '',
+        'email': _userEmail ?? '',
         'phone': _phoneCtrl.text.trim(),
         'country': _selectedCountry,
         'city': _cityCtrl.text.trim(),
         'scouting_level': _selectedScoutingLevel,
-        'years_experience': int.parse(_experienceYearsCtrl.text.trim()),
+        'experience_years': int.parse(_experienceYearsCtrl.text.trim()),
         'bio': _bioCtrl.text.trim(),
         'last_seen': DateTime.now().toIso8601String(),
       };
@@ -169,8 +191,66 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildLabel('Full Name'),
-                  _buildTextField('Enter your full name', _fullNameCtrl),
+
+                  // Display user info from registration
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800]?.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[600]!, width: 1),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Account Information',
+                          style: TextStyle(
+                            color: Colors.grey[300],
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.person,
+                              color: Colors.grey[400],
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Name: ${_userFullName ?? 'Loading...'}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.email,
+                              color: Colors.grey[400],
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Email: ${_userEmail ?? 'Loading...'}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
                   _buildLabel('Phone Number'),
                   _buildTextField(
                     'Enter phone',
@@ -178,7 +258,7 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     keyboard: TextInputType.phone,
                     validator: (v) {
                       final val = v!.trim();
-                      if (!RegExp(r'^\d{8,15}\$').hasMatch(val)) {
+                      if (!RegExp(r'^\d{8,15}$').hasMatch(val)) {
                         return 'Enter 8–15 digits';
                       }
                       return null;

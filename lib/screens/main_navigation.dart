@@ -5,8 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 import '../widgets/dynamic_profile_widget.dart';
 import 'home_page.dart';
-import 'search_page.dart';
 import 'news_home_page.dart';
+import 'games_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -32,8 +32,8 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _onNavTapped(int index) async {
-    if (index == 3) {
-      // Profile tab - check if user is logged in
+    // Check authentication for Profile and Games tabs
+    if (index == 2 || index == 3) {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
         if (mounted) {
@@ -65,9 +65,9 @@ class _MainNavigationState extends State<MainNavigation> {
         },
         children: [
           const HomePage(),
-          const SearchPage(),
           NewsHomePage(toggleTheme: () {}),
           const ProfileRouterWidget(),
+          const GamificationDashboard(),
         ],
       ),
       bottomNavigationBar: BottomNavbar(

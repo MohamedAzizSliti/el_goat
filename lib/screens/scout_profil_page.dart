@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/navigation_service.dart';
 import 'chat_page.dart';
 
-class ClubProfilePage extends StatefulWidget {
-  final String clubUserId;
-  const ClubProfilePage({Key? key, required this.clubUserId}) : super(key: key);
+class ScoutProfilePage extends StatefulWidget {
+  final String scoutUserId;
+  const ScoutProfilePage({super.key, required this.scoutUserId});
 
   @override
-  State<ClubProfilePage> createState() => _ClubProfilePageState();
+  State<ScoutProfilePage> createState() => _ScoutProfilePageState();
 }
 
-class _ClubProfilePageState extends State<ClubProfilePage>
+class _ScoutProfilePageState extends State<ScoutProfilePage>
     with TickerProviderStateMixin {
   int _selectedIndex = 2;
-  Map<String, dynamic>? _club;
+  Map<String, dynamic>? _scout;
   bool _loading = true;
   late TabController _tabController;
 
@@ -22,7 +21,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadClubProfile();
+    _loadScoutProfile();
   }
 
   @override
@@ -31,17 +30,17 @@ class _ClubProfilePageState extends State<ClubProfilePage>
     super.dispose();
   }
 
-  Future<void> _loadClubProfile() async {
+  Future<void> _loadScoutProfile() async {
     try {
       final res =
           await Supabase.instance.client
-              .from('club_profiles')
+              .from('scout_profiles')
               .select()
-              .eq('user_id', widget.clubUserId)
+              .eq('user_id', widget.scoutUserId)
               .maybeSingle();
 
       setState(() {
-        _club = (res is Map<String, dynamic>) ? res : null;
+        _scout = (res is Map<String, dynamic>) ? res : null;
         _loading = false;
       });
     } catch (e) {
@@ -62,30 +61,30 @@ class _ClubProfilePageState extends State<ClubProfilePage>
       );
     }
 
-    if (_club == null) {
+    if (_scout == null) {
       return const Scaffold(
         backgroundColor: Colors.black,
         body: Center(
           child: Text(
-            'Club not found',
+            'Scout not found',
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
         ),
       );
     }
 
-    final club = _club!;
+    final scout = _scout!;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          // Header Section (like footballer profile)
+          // Header Section (like club profile)
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.purple.withValues(alpha: 0.8), Colors.black],
+                colors: [Colors.blue.withValues(alpha: 0.8), Colors.black],
               ),
             ),
             child: SafeArea(
@@ -105,7 +104,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                         ),
                         const Spacer(),
                         Text(
-                          club['club_name'] ?? 'Club Profile',
+                          scout['full_name'] ?? 'Scout Profile',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -121,9 +120,9 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                               MaterialPageRoute(
                                 builder:
                                     (_) => ChatScreen(
-                                      otherUserId: widget.clubUserId,
+                                      otherUserId: widget.scoutUserId,
                                       otherUserName:
-                                          club['club_name'] ?? 'Club',
+                                          scout['full_name'] ?? 'Scout',
                                       otherUserImage: '',
                                     ),
                               ),
@@ -138,7 +137,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
                       children: [
-                        // Club Logo
+                        // Scout Avatar
                         Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -155,16 +154,16 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                             radius: 60,
                             backgroundColor: Colors.grey[800],
                             child: const Icon(
-                              Icons.business,
+                              Icons.search,
                               size: 60,
                               color: Colors.yellow,
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Club Name
+                        // Scout Name
                         Text(
-                          club['club_name'] ?? 'Club Name',
+                          scout['full_name'] ?? 'Scout Name',
                           style: const TextStyle(
                             fontSize: 28,
                             color: Colors.white,
@@ -184,7 +183,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              club['location'] ?? 'Location',
+                              '${scout['city'] ?? 'City'}, ${scout['country'] ?? 'Country'}',
                               style: const TextStyle(
                                 color: Colors.grey,
                                 fontSize: 16,
@@ -197,9 +196,15 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatItem('Players', '25'),
-                            _buildStatItem('Trophies', '12'),
-                            _buildStatItem('Founded', '1995'),
+                            _buildStatItem(
+                              'Level',
+                              scout['scouting_level'] ?? 'Local',
+                            ),
+                            _buildStatItem(
+                              'Experience',
+                              '${scout['experience_years'] ?? 0} yrs',
+                            ),
+                            _buildStatItem('Evaluations', '45'),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -223,9 +228,9 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                                   MaterialPageRoute(
                                     builder:
                                         (_) => ChatScreen(
-                                          otherUserId: widget.clubUserId,
+                                          otherUserId: widget.scoutUserId,
                                           otherUserName:
-                                              club['club_name'] ?? 'Club',
+                                              scout['full_name'] ?? 'Scout',
                                           otherUserImage: '',
                                         ),
                                   ),
@@ -264,7 +269,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [_buildPostsTab(), _buildAboutMeTab(club)],
+              children: [_buildPostsTab(), _buildAboutMeTab(scout)],
             ),
           ),
         ],
@@ -324,39 +329,39 @@ class _ClubProfilePageState extends State<ClubProfilePage>
   Widget _buildPostsTab() {
     final posts = [
       {
-        'title': 'New Season Training Begins! 🏃‍♂️',
+        'title': 'Scouting Report: Promising Young Talent! ⭐',
         'content':
-            'Our team is ready for the new season! Training sessions have started and the players are showing great dedication. We\'re excited for what\'s to come! #NewSeason #Training',
-        'time': '2 hours ago',
-        'likes': 45,
-        'comments': 12,
+            'Just watched an incredible match! Found a young midfielder with exceptional vision and passing ability. His technical skills and game intelligence are remarkable for his age. Definitely one to watch! #ScoutingReport #YoungTalent',
+        'time': '3 hours ago',
+        'likes': 28,
+        'comments': 8,
         'image': null,
       },
       {
-        'title': 'Youth Academy Update 🌟',
+        'title': 'Regional Championship Analysis 📊',
         'content':
-            'Great progress from our young talents! Our youth academy continues to develop the next generation of football stars. Proud of their commitment and skill development.',
+            'Completed my evaluation of the regional championship. Several standout players caught my attention. The level of competition was impressive, and I\'ve identified 3 potential prospects for further evaluation.',
         'time': '1 day ago',
-        'likes': 78,
-        'comments': 23,
+        'likes': 45,
+        'comments': 15,
         'image': null,
       },
       {
-        'title': 'Victory in Championship! 🏆',
+        'title': 'Training Session Observations 🏃‍♂️',
         'content':
-            'What an incredible match! Our team showed amazing teamwork and determination. Thank you to all our fans for the incredible support. On to the next challenge!',
-        'time': '3 days ago',
-        'likes': 156,
-        'comments': 45,
+            'Attended a youth academy training session today. The coaching methods and player development programs are excellent. Great to see young players working hard to improve their skills.',
+        'time': '2 days ago',
+        'likes': 32,
+        'comments': 6,
         'image': null,
       },
       {
-        'title': 'Welcome New Players! 👋',
+        'title': 'International Tournament Update 🌍',
         'content':
-            'We\'re excited to welcome our new signings to the club family. These talented players will strengthen our squad and help us achieve our goals this season.',
+            'Back from the international youth tournament. Amazing experience watching future stars compete at the highest level. Several players have been added to my watchlist for continued monitoring.',
         'time': '1 week ago',
-        'likes': 89,
-        'comments': 34,
+        'likes': 67,
+        'comments': 22,
         'image': null,
       },
     ];
@@ -384,7 +389,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                     radius: 20,
                     backgroundColor: Colors.yellow,
                     child: const Icon(
-                      Icons.business,
+                      Icons.search,
                       color: Colors.black,
                       size: 20,
                     ),
@@ -395,7 +400,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _club?['club_name'] ?? 'Club Name',
+                          _scout?['full_name'] ?? 'Scout Name',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -470,18 +475,42 @@ class _ClubProfilePageState extends State<ClubProfilePage>
     );
   }
 
-  Widget _buildAboutMeTab(Map<String, dynamic> club) {
+  Widget _buildPostAction(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutMeTab(Map<String, dynamic> scout) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Club Description (only if available)
-          if (club['description'] != null &&
-              club['description'].toString().isNotEmpty)
-            _buildInfoCard('About Our Club', [
+          // Scout Bio (only if available)
+          if (scout['bio'] != null && scout['bio'].toString().isNotEmpty)
+            _buildInfoCard('About Me', [
               Text(
-                club['description'],
+                scout['bio'],
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -489,30 +518,36 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                 ),
               ),
             ]),
-          if (club['description'] != null &&
-              club['description'].toString().isNotEmpty)
+          if (scout['bio'] != null && scout['bio'].toString().isNotEmpty)
             const SizedBox(height: 16),
 
-          // Club Information (only actual data from model)
-          _buildInfoCard('Club Information', [
-            _buildInfoRow('Club Name', club['club_name'] ?? 'Not specified'),
-            _buildInfoRow('Location', club['location'] ?? 'Not specified'),
-            if (club['website'] != null &&
-                club['website'].toString().isNotEmpty)
-              _buildInfoRow('Website', club['website']),
+          // Scout Information (only actual data from model)
+          _buildInfoCard('Scout Information', [
+            _buildInfoRow('Full Name', scout['full_name'] ?? 'Not specified'),
+            _buildInfoRow('Email', scout['email'] ?? 'Not specified'),
+            _buildInfoRow('Phone', scout['phone'] ?? 'Not specified'),
+            _buildInfoRow('Country', scout['country'] ?? 'Not specified'),
+            _buildInfoRow('City', scout['city'] ?? 'Not specified'),
+            _buildInfoRow(
+              'Scouting Level',
+              scout['scouting_level'] ?? 'Not specified',
+            ),
+            _buildInfoRow(
+              'Experience',
+              '${scout['experience_years'] ?? 0} years',
+            ),
             _buildInfoRow(
               'Created',
-              club['created_at'] != null
-                  ? DateTime.parse(club['created_at']).year.toString()
+              scout['created_at'] != null
+                  ? DateTime.parse(scout['created_at']).year.toString()
                   : 'Not specified',
             ),
-            if (club['last_seen'] != null)
-              _buildInfoRow('Last Active', _formatDate(club['last_seen'])),
+            if (scout['last_seen'] != null)
+              _buildInfoRow('Last Active', _formatDate(scout['last_seen'])),
           ]),
 
           // Only show additional sections if there's meaningful data
-          if (club['description'] == null ||
-              club['description'].toString().isEmpty)
+          if (scout['bio'] == null || scout['bio'].toString().isEmpty)
             Column(
               children: [
                 const SizedBox(height: 16),
@@ -537,7 +572,7 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'The club hasn\'t added a description or additional details yet.',
+                        'The scout hasn\'t added a bio or additional details yet.',
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
@@ -571,31 +606,6 @@ class _ClubProfilePageState extends State<ClubProfilePage>
     } catch (e) {
       return 'Unknown';
     }
-  }
-
-  Widget _buildPostAction(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildInfoCard(String title, List<Widget> children) {

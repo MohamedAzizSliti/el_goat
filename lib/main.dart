@@ -1,4 +1,5 @@
 import 'package:el_goat/screens/profile_page.dart';
+import 'package:el_goat/screens/scout_profil_page.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -10,7 +11,6 @@ import 'screens/news_reels_page.dart';
 import 'screens/registration_page.dart';
 import 'screens/login.dart';
 import 'screens/accueil_page.dart';
-import 'screens/scout_profile_page.dart';
 import 'screens/club_profil_page.dart';
 import 'screens/chat_page.dart';
 import 'screens/games_page.dart';
@@ -89,7 +89,7 @@ class MyApp extends StatelessWidget {
         '/login': (ctx) => const LoginPage(),
         '/accueil': (ctx) => const AcceuilPage(),
         '/footballer_profile': (ctx) => FootballerProfilePage(),
-        '/scout_profile': (ctx) => const ScoutProfilePage(),
+        '/scout_profile': (ctx) =>  ScoutProfilePage(scoutUserId:Supabase.instance.client.auth.currentUser!.id,),
         '/club_profile':
             (ctx) => ClubProfilePage(
               clubUserId: Supabase.instance.client.auth.currentUser!.id,

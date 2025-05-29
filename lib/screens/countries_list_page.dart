@@ -11,7 +11,7 @@ class CountriesListPage extends StatefulWidget {
   State<CountriesListPage> createState() => _CountriesListPageState();
 }
 
-class _CountriesListPageState extends State<CountriesListPage> 
+class _CountriesListPageState extends State<CountriesListPage>
     with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   List<String> _filteredCountries = Countries.all;
@@ -38,8 +38,9 @@ class _CountriesListPageState extends State<CountriesListPage>
       if (_showPopularFirst) {
         _filteredCountries = [
           ...Countries.footballCountries,
-          ...Countries.all.where((country) => 
-              !Countries.footballCountries.contains(country)),
+          ...Countries.all.where(
+            (country) => !Countries.footballCountries.contains(country),
+          ),
         ];
       } else {
         _filteredCountries = Countries.all;
@@ -83,9 +84,10 @@ class _CountriesListPageState extends State<CountriesListPage>
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [Colors.yellow[400]!, Colors.orange[400]!],
-          ).createShader(bounds),
+          shaderCallback:
+              (bounds) => LinearGradient(
+                colors: [Colors.yellow[400]!, Colors.orange[400]!],
+              ).createShader(bounds),
           child: const Text(
             'Countries',
             style: TextStyle(
@@ -147,19 +149,28 @@ class _CountriesListPageState extends State<CountriesListPage>
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Search countries...',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
                   prefixIcon: Icon(Icons.search, color: Colors.yellow[400]),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.white70),
-                          onPressed: () {
-                            _searchController.clear();
-                            _filterCountries('');
-                          },
-                        )
-                      : null,
+                  suffixIcon:
+                      _searchController.text.isNotEmpty
+                          ? IconButton(
+                            icon: const Icon(
+                              Icons.clear,
+                              color: Colors.white70,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              _filterCountries('');
+                            },
+                          )
+                          : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                 ),
                 onChanged: _filterCountries,
               ),
@@ -177,14 +188,28 @@ class _CountriesListPageState extends State<CountriesListPage>
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.yellow[400]!.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: Colors.yellow[400]!.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatItem('Total Countries', '${Countries.all.length}', Icons.public),
-                  _buildStatItem('Football Nations', '${Countries.footballCountries.length}', Icons.sports_soccer),
-                  _buildStatItem('Showing', '${_filteredCountries.length}', Icons.visibility),
+                  _buildStatItem(
+                    'Total Countries',
+                    '${Countries.all.length}',
+                    Icons.public,
+                  ),
+                  _buildStatItem(
+                    'Football Nations',
+                    '${Countries.footballCountries.length}',
+                    Icons.sports_soccer,
+                  ),
+                  _buildStatItem(
+                    'Showing',
+                    '${_filteredCountries.length}',
+                    Icons.visibility,
+                  ),
                 ],
               ),
             ),
@@ -203,10 +228,6 @@ class _CountriesListPageState extends State<CountriesListPage>
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
       ),
     );
   }
@@ -287,16 +308,14 @@ class _CountriesListPageState extends State<CountriesListPage>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: isPopular 
-                      ? [Colors.yellow[400]!, Colors.orange[400]!]
-                      : [Colors.blue[400]!, Colors.purple[400]!],
+                  colors:
+                      isPopular
+                          ? [Colors.yellow[400]!, Colors.orange[400]!]
+                          : [Colors.blue[400]!, Colors.purple[400]!],
                 ),
               ),
               child: Center(
-                child: Text(
-                  flag,
-                  style: const TextStyle(fontSize: 24),
-                ),
+                child: Text(flag, style: const TextStyle(fontSize: 24)),
               ),
             ),
             title: Text(
@@ -307,18 +326,21 @@ class _CountriesListPageState extends State<CountriesListPage>
                 fontSize: 16,
               ),
             ),
-            subtitle: isPopular 
-                ? Text(
-                    'Popular Football Nation',
-                    style: TextStyle(
-                      color: Colors.yellow[400],
-                      fontSize: 12,
+            subtitle:
+                isPopular
+                    ? Text(
+                      'Popular Football Nation',
+                      style: TextStyle(color: Colors.yellow[400], fontSize: 12),
+                    )
+                    : null,
+            trailing:
+                isPopular
+                    ? Icon(Icons.star, color: Colors.yellow[400], size: 20)
+                    : Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      size: 16,
                     ),
-                  )
-                : null,
-            trailing: isPopular 
-                ? Icon(Icons.star, color: Colors.yellow[400], size: 20)
-                : Icon(Icons.arrow_forward_ios, color: Colors.white.withValues(alpha: 0.5), size: 16),
             onTap: () {
               // Handle country selection
               ScaffoldMessenger.of(context).showSnackBar(

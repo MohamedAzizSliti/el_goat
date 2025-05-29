@@ -73,10 +73,6 @@ class _NewsHomePageState extends State<NewsHomePage>
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ),
     );
   }
 

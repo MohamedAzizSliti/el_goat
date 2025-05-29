@@ -431,10 +431,6 @@ class _AITrainingScreenState extends State<AITrainingScreen>
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ),
     );
   }
 

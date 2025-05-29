@@ -54,32 +54,38 @@ class _GamificationDashboardState extends State<GamificationDashboard>
 
       if ((existingEntries as List).isEmpty) {
         print('Initializing player games...');
-        
+
         // Get all games
-        final games = await supabase
-            .from('games')
-            .select('id');
-            
+        final games = await supabase.from('games').select('id');
+
         // Get all challenges
-        final challenges = await supabase
-            .from('challenges')
-            .select('id');
+        final challenges = await supabase.from('challenges').select('id');
 
         // Create entries for games
-        final gameEntries = (games as List).map((game) => {
-          'player_id': userId,
-          'game_id': game['id'],
-          'status': 'not_started',
-          'current_progress': 0
-        }).toList();
+        final gameEntries =
+            (games as List)
+                .map(
+                  (game) => {
+                    'player_id': userId,
+                    'game_id': game['id'],
+                    'status': 'not_started',
+                    'current_progress': 0,
+                  },
+                )
+                .toList();
 
         // Create entries for challenges
-        final challengeEntries = (challenges as List).map((challenge) => {
-          'player_id': userId,
-          'challenge_id': challenge['id'],
-          'status': 'not_started',
-          'current_progress': 0
-        }).toList();
+        final challengeEntries =
+            (challenges as List)
+                .map(
+                  (challenge) => {
+                    'player_id': userId,
+                    'challenge_id': challenge['id'],
+                    'status': 'not_started',
+                    'current_progress': 0,
+                  },
+                )
+                .toList();
 
         // Insert all entries
         if (gameEntries.isNotEmpty) {
@@ -108,11 +114,12 @@ class _GamificationDashboardState extends State<GamificationDashboard>
       await skillService.initialize();
 
       // Fetch XP progress
-      final xpRes = await supabase
-          .from('player_xp_progress')
-          .select()
-          .eq('player_id', userId)
-          .maybeSingle();
+      final xpRes =
+          await supabase
+              .from('player_xp_progress')
+              .select()
+              .eq('player_id', userId)
+              .maybeSingle();
 
       // Fetch badges
       final badgeRes = await supabase
@@ -162,23 +169,27 @@ class _GamificationDashboardState extends State<GamificationDashboard>
       print('Debug - Fetched games: ${games.length}');
 
       // Format challenges
-      final List<Map<String, dynamic>> challengesFormatted = 
-          List<Map<String, dynamic>>.from((challenges as List<dynamic>).map((item) {
-        return {
-          ...Map<String, dynamic>.from(item['challenge'] as Map),
-          'status': item['status'],
-          'current_progress': item['current_progress'] ?? 0
-        };
-      }).toList());
+      final List<Map<String, dynamic>> challengesFormatted =
+          List<Map<String, dynamic>>.from(
+            (challenges as List<dynamic>).map((item) {
+              return {
+                ...Map<String, dynamic>.from(item['challenge'] as Map),
+                'status': item['status'],
+                'current_progress': item['current_progress'] ?? 0,
+              };
+            }).toList(),
+          );
 
       // Format games
-      final List<Map<String, dynamic>> gamesFormatted = 
-          List<Map<String, dynamic>>.from((games as List<dynamic>).map((item) {
-        return {
-          ...Map<String, dynamic>.from(item['game'] as Map),
-          'status': item['status']
-        };
-      }).toList());
+      final List<Map<String, dynamic>> gamesFormatted =
+          List<Map<String, dynamic>>.from(
+            (games as List<dynamic>).map((item) {
+              return {
+                ...Map<String, dynamic>.from(item['game'] as Map),
+                'status': item['status'],
+              };
+            }).toList(),
+          );
 
       setState(() {
         xpData = xpRes;
@@ -187,7 +198,6 @@ class _GamificationDashboardState extends State<GamificationDashboard>
         gamesWithStatus = gamesFormatted;
         skillCategories = skillService.getAllCategories();
       });
-
     } catch (e) {
       print("Error fetching data: $e");
     }
@@ -208,12 +218,12 @@ class _GamificationDashboardState extends State<GamificationDashboard>
 
         // Create player_games entries for each game and challenge
         final List<Map<String, dynamic>> entries = [];
-        
+
         for (var game in games as List) {
           entries.add({
             'player_id': userId,
             'game_id': game['id'],
-            'status': 'not_started'
+            'status': 'not_started',
           });
         }
 
@@ -221,7 +231,7 @@ class _GamificationDashboardState extends State<GamificationDashboard>
           entries.add({
             'player_id': userId,
             'game_id': challenge['id'],
-            'status': 'not_started'
+            'status': 'not_started',
           });
         }
 
@@ -235,18 +245,24 @@ class _GamificationDashboardState extends State<GamificationDashboard>
     }
   }
 
-  Future<void> updateProgress(Map<String, dynamic> item, bool isChallenge) async {
+  Future<void> updateProgress(
+    Map<String, dynamic> item,
+    bool isChallenge,
+  ) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
 
     try {
-      await supabase.from('player_games').update({
-        'status': 'completed',
-        'completed_at': DateTime.now().toIso8601String(),
-      }).match({
-        'player_id': userId,
-        isChallenge ? 'challenge_id' : 'game_id': item['id']
-      });
+      await supabase
+          .from('player_games')
+          .update({
+            'status': 'completed',
+            'completed_at': DateTime.now().toIso8601String(),
+          })
+          .match({
+            'player_id': userId,
+            isChallenge ? 'challenge_id' : 'game_id': item['id'],
+          });
 
       _fetchGamificationData();
     } catch (e) {
@@ -310,10 +326,7 @@ class _GamificationDashboardState extends State<GamificationDashboard>
                     ),
                     Text(
                       'Level ${skill.currentLevel}',
-                      style: TextStyle(
-                        color: Colors.blue[300],
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.blue[300], fontSize: 16),
                     ),
                   ],
                 ),
@@ -350,15 +363,16 @@ class _GamificationDashboardState extends State<GamificationDashboard>
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: skill.attributes.entries.map((entry) {
-                return Chip(
-                  backgroundColor: Colors.blue[900],
-                  label: Text(
-                    '${entry.key}: ${entry.value.toStringAsFixed(1)}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                );
-              }).toList(),
+              children:
+                  skill.attributes.entries.map((entry) {
+                    return Chip(
+                      backgroundColor: Colors.blue[900],
+                      label: Text(
+                        '${entry.key}: ${entry.value.toStringAsFixed(1)}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
             ),
           ],
           const SizedBox(height: 20),
@@ -381,29 +395,33 @@ class _GamificationDashboardState extends State<GamificationDashboard>
   Widget _buildFilterChips() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: GameStatusFilter.values.map((filter) {
-        String label = switch (filter) {
-          GameStatusFilter.all => "All",
-          GameStatusFilter.inProgress => "In Progress",
-          GameStatusFilter.completed => "Completed",
-        };
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: ChoiceChip(
-            label: Text(label),
-            selected: _statusFilter == filter,
-            onSelected: (_) => setState(() => _statusFilter = filter),
-          ),
-        );
-      }).toList(),
+      children:
+          GameStatusFilter.values.map((filter) {
+            String label = switch (filter) {
+              GameStatusFilter.all => "All",
+              GameStatusFilter.inProgress => "In Progress",
+              GameStatusFilter.completed => "Completed",
+            };
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: ChoiceChip(
+                label: Text(label),
+                selected: _statusFilter == filter,
+                onSelected: (_) => setState(() => _statusFilter = filter),
+              ),
+            );
+          }).toList(),
     );
   }
 
   List<Map<String, dynamic>> _filteredItems(bool isChallenges) {
     final items = isChallenges ? challengesWithStatus : gamesWithStatus;
     if (_statusFilter == GameStatusFilter.all) return items;
-    
-    final filterStatus = _statusFilter == GameStatusFilter.inProgress ? 'in_progress' : 'completed';
+
+    final filterStatus =
+        _statusFilter == GameStatusFilter.inProgress
+            ? 'in_progress'
+            : 'completed';
     return items.where((item) => item['status'] == filterStatus).toList();
   }
 
@@ -412,341 +430,412 @@ class _GamificationDashboardState extends State<GamificationDashboard>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          height: MediaQuery.of(context).size.height * 0.9,
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[700],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: DefaultTabController(
-                  length: isChallenge ? 2 : 1,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: MediaQuery.of(context).size.height * 0.9,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
                   child: Column(
                     children: [
-                      if (isChallenge)
-                        TabBar(
-                          tabs: const [
-                            Tab(text: 'Overview'),
-                            Tab(text: 'Instructions'),
-                          ],
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[700],
+                          borderRadius: BorderRadius.circular(2),
                         ),
+                      ),
                       Expanded(
-                        child: TabBarView(
-                          children: [
-                            // Overview Tab
-                            SingleChildScrollView(
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: item['status'] == 'completed'
-                                              ? Colors.green[700]
-                                              : Colors.blue[700],
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          isChallenge
-                                              ? Icons.emoji_events
-                                              : Icons.games,
-                                          color: Colors.white,
-                                          size: 30,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 15),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              item['title'],
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: _getDifficultyColor(
-                                                        item['difficulty']),
-                                                    borderRadius:
-                                                        BorderRadius.circular(12),
-                                                  ),
-                                                  child: Text(
-                                                    item['difficulty']
-                                                        .toUpperCase(),
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.blue[900],
-                                                    borderRadius:
-                                                        BorderRadius.circular(12),
-                                                  ),
-                                                  child: Text(
-                                                    item['skill_type']
-                                                        .toUpperCase(),
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Text(
-                                    item['description'],
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  if (isChallenge) ...[
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Progress',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    TweenAnimationBuilder<double>(
-                                      duration:
-                                          const Duration(milliseconds: 1000),
-                                      curve: Curves.easeInOut,
-                                      tween: Tween<double>(
-                                        begin: 0,
-                                        end: item['current_progress'] /
-                                            item['target_progress'],
-                                      ),
-                                      builder: (context, value, _) => Column(
+                        child: DefaultTabController(
+                          length: isChallenge ? 2 : 1,
+                          child: Column(
+                            children: [
+                              if (isChallenge)
+                                TabBar(
+                                  tabs: const [
+                                    Tab(text: 'Overview'),
+                                    Tab(text: 'Instructions'),
+                                  ],
+                                ),
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    // Overview Tab
+                                    SingleChildScrollView(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Stack(
-                                            alignment: Alignment.center,
+                                          Row(
                                             children: [
-                                              CircularProgressIndicator(
-                                                value: value,
-                                                backgroundColor:
-                                                    Colors.grey[800],
-                                                valueColor:
-                                                    AlwaysStoppedAnimation(
-                                                  item['status'] == 'completed'
-                                                      ? Colors.green
-                                                      : Colors.blue[400],
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  12,
                                                 ),
-                                                strokeWidth: 8,
-                                              ),
-                                              Text(
-                                                '${(value * 100).toInt()}%',
-                                                style: const TextStyle(
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      item['status'] ==
+                                                              'completed'
+                                                          ? Colors.green[700]
+                                                          : Colors.blue[700],
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  isChallenge
+                                                      ? Icons.emoji_events
+                                                      : Icons.games,
                                                   color: Colors.white,
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
+                                                  size: 30,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 15),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      item['title'],
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 24,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Row(
+                                                      children: [
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 8,
+                                                                vertical: 4,
+                                                              ),
+                                                          decoration: BoxDecoration(
+                                                            color: _getDifficultyColor(
+                                                              item['difficulty'],
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                          ),
+                                                          child: Text(
+                                                            item['difficulty']
+                                                                .toUpperCase(),
+                                                            style:
+                                                                const TextStyle(
+                                                                  color:
+                                                                      Colors
+                                                                          .white,
+                                                                  fontSize: 12,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 8,
+                                                                vertical: 4,
+                                                              ),
+                                                          decoration: BoxDecoration(
+                                                            color:
+                                                                Colors
+                                                                    .blue[900],
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                          ),
+                                                          child: Text(
+                                                            item['skill_type']
+                                                                .toUpperCase(),
+                                                            style:
+                                                                const TextStyle(
+                                                                  color:
+                                                                      Colors
+                                                                          .white,
+                                                                  fontSize: 12,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          const SizedBox(height: 10),
+                                          const SizedBox(height: 20),
                                           Text(
-                                            '${item['current_progress']} / ${item['target_progress']}',
+                                            item['description'],
                                             style: const TextStyle(
                                               color: Colors.white70,
                                               fontSize: 16,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: 20),
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.amber[900]?.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.amber[700]!,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          isChallenge
-                                              ? Icons.stars
-                                              : Icons.workspace_premium,
-                                          color: Colors.amber,
-                                          size: 30,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
+                                          if (isChallenge) ...[
+                                            const SizedBox(height: 20),
                                             const Text(
-                                              'Reward',
+                                              'Progress',
                                               style: TextStyle(
-                                                color: Colors.amber,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                            Text(
-                                              isChallenge
-                                                  ? '${item['points_reward']} Points'
-                                                  : '${item['xp_reward']} XP',
-                                              style: const TextStyle(
-                                                color: Colors.amber,
-                                                fontSize: 20,
+                                                color: Colors.white,
+                                                fontSize: 18,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
+                                            const SizedBox(height: 10),
+                                            TweenAnimationBuilder<double>(
+                                              duration: const Duration(
+                                                milliseconds: 1000,
+                                              ),
+                                              curve: Curves.easeInOut,
+                                              tween: Tween<double>(
+                                                begin: 0,
+                                                end:
+                                                    item['current_progress'] /
+                                                    item['target_progress'],
+                                              ),
+                                              builder:
+                                                  (context, value, _) => Column(
+                                                    children: [
+                                                      Stack(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        children: [
+                                                          CircularProgressIndicator(
+                                                            value: value,
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .grey[800],
+                                                            valueColor: AlwaysStoppedAnimation(
+                                                              item['status'] ==
+                                                                      'completed'
+                                                                  ? Colors.green
+                                                                  : Colors
+                                                                      .blue[400],
+                                                            ),
+                                                            strokeWidth: 8,
+                                                          ),
+                                                          Text(
+                                                            '${(value * 100).toInt()}%',
+                                                            style:
+                                                                const TextStyle(
+                                                                  color:
+                                                                      Colors
+                                                                          .white,
+                                                                  fontSize: 20,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Text(
+                                                        '${item['current_progress']} / ${item['target_progress']}',
+                                                        style: const TextStyle(
+                                                          color: Colors.white70,
+                                                          fontSize: 16,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                            ),
                                           ],
-                                        ),
-                                      ],
+                                          const SizedBox(height: 20),
+                                          Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: Colors.amber[900]
+                                                  ?.withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.amber[700]!,
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  isChallenge
+                                                      ? Icons.stars
+                                                      : Icons.workspace_premium,
+                                                  color: Colors.amber,
+                                                  size: 30,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'Reward',
+                                                      style: TextStyle(
+                                                        color: Colors.amber,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      isChallenge
+                                                          ? '${item['points_reward']} Points'
+                                                          : '${item['xp_reward']} XP',
+                                                      style: const TextStyle(
+                                                        color: Colors.amber,
+                                                        fontSize: 20,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 30),
+                                          if (item['status'] != 'completed')
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: ElevatedButton(
+                                                onPressed: () async {
+                                                  if (isChallenge) {
+                                                    // Simulate progress update
+                                                    final currentProgress =
+                                                        item['current_progress'] ??
+                                                        0;
+                                                    final newProgress =
+                                                        currentProgress +
+                                                        (item['target_progress'] *
+                                                                0.2)
+                                                            .round();
+
+                                                    await supabase
+                                                        .from('player_games')
+                                                        .update({
+                                                          'current_progress':
+                                                              newProgress,
+                                                          'status':
+                                                              newProgress >=
+                                                                      item['target_progress']
+                                                                  ? 'completed'
+                                                                  : 'in_progress',
+                                                        })
+                                                        .match({
+                                                          'player_id':
+                                                              supabase
+                                                                  .auth
+                                                                  .currentUser!
+                                                                  .id,
+                                                          'challenge_id':
+                                                              item['id'],
+                                                        });
+                                                  } else {
+                                                    await updateProgress(
+                                                      item,
+                                                      isChallenge,
+                                                    );
+                                                  }
+
+                                                  Navigator.pop(context);
+                                                  _fetchGamificationData();
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      Colors.blue[700],
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 16,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  item['status'] ==
+                                                          'in_progress'
+                                                      ? 'Continue'
+                                                      : 'Start',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 30),
-                                  if (item['status'] != 'completed')
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () async {
-                                          if (isChallenge) {
-                                            // Simulate progress update
-                                            final currentProgress =
-                                                item['current_progress'] ?? 0;
-                                            final newProgress = currentProgress +
-                                                (item['target_progress'] * 0.2)
-                                                    .round();
-
-                                            await supabase
-                                                .from('player_games')
-                                                .update({
-                                              'current_progress': newProgress,
-                                              'status': newProgress >=
-                                                      item['target_progress']
-                                                  ? 'completed'
-                                                  : 'in_progress',
-                                            }).match({
-                                              'player_id': supabase
-                                                  .auth.currentUser!.id,
-                                              'challenge_id': item['id']
-                                            });
-                                          } else {
-                                            await updateProgress(
-                                                item, isChallenge);
-                                          }
-
+                                    // Instructions Tab (only for challenges)
+                                    if (isChallenge)
+                                      ChallengeInstructionsWidget(
+                                        challengeId: item['id'],
+                                        onStart: () async {
+                                          await supabase
+                                              .from('player_games')
+                                              .update({'status': 'in_progress'})
+                                              .match({
+                                                'player_id':
+                                                    supabase
+                                                        .auth
+                                                        .currentUser!
+                                                        .id,
+                                                'challenge_id': item['id'],
+                                              });
+                                          _fetchGamificationData();
+                                        },
+                                        onComplete: () async {
+                                          await supabase
+                                              .from('player_games')
+                                              .update({
+                                                'status': 'completed',
+                                                'completed_at':
+                                                    DateTime.now()
+                                                        .toIso8601String(),
+                                              })
+                                              .match({
+                                                'player_id':
+                                                    supabase
+                                                        .auth
+                                                        .currentUser!
+                                                        .id,
+                                                'challenge_id': item['id'],
+                                              });
                                           Navigator.pop(context);
                                           _fetchGamificationData();
                                         },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue[700],
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 16),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          item['status'] == 'in_progress'
-                                              ? 'Continue'
-                                              : 'Start',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            // Instructions Tab (only for challenges)
-                            if (isChallenge)
-                              ChallengeInstructionsWidget(
-                                challengeId: item['id'],
-                                onStart: () async {
-                                  await supabase.from('player_games').update({
-                                    'status': 'in_progress',
-                                  }).match({
-                                    'player_id': supabase.auth.currentUser!.id,
-                                    'challenge_id': item['id']
-                                  });
-                                  _fetchGamificationData();
-                                },
-                                onComplete: () async {
-                                  await supabase.from('player_games').update({
-                                    'status': 'completed',
-                                    'completed_at':
-                                        DateTime.now().toIso8601String(),
-                                  }).match({
-                                    'player_id': supabase.auth.currentUser!.id,
-                                    'challenge_id': item['id']
-                                  });
-                                  Navigator.pop(context);
-                                  _fetchGamificationData();
-                                },
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
           ),
-        ),
-      ),
     );
   }
 
@@ -756,10 +845,7 @@ class _GamificationDashboardState extends State<GamificationDashboard>
 
     if (filtered.isEmpty) {
       return const Center(
-        child: Text(
-          "No items found",
-          style: TextStyle(color: Colors.white54),
-        ),
+        child: Text("No items found", style: TextStyle(color: Colors.white54)),
       );
     }
 
@@ -769,9 +855,10 @@ class _GamificationDashboardState extends State<GamificationDashboard>
       itemBuilder: (context, index) {
         final item = filtered[index];
         final status = item['status'];
-        final progress = isChallenges
-            ? (item['current_progress'] / item['target_progress'])
-            : null;
+        final progress =
+            isChallenges
+                ? (item['current_progress'] / item['target_progress'])
+                : null;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
@@ -788,7 +875,10 @@ class _GamificationDashboardState extends State<GamificationDashboard>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: status == 'completed' ? Colors.green : Colors.blue[700],
+                          color:
+                              status == 'completed'
+                                  ? Colors.green
+                                  : Colors.blue[700],
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -855,7 +945,7 @@ class _GamificationDashboardState extends State<GamificationDashboard>
         body: Center(
           child: Text(
             "Please log in to view your dashboard",
-            style: TextStyle(color: Colors.white)
+            style: TextStyle(color: Colors.white),
           ),
         ),
       );
@@ -886,7 +976,7 @@ class _GamificationDashboardState extends State<GamificationDashboard>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildItemsList(true),  // Challenges
+                _buildItemsList(true), // Challenges
                 _buildItemsList(false), // Games
                 SkillTreeWidget(
                   categories: skillCategories,
@@ -896,10 +986,6 @@ class _GamificationDashboardState extends State<GamificationDashboard>
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
       ),
     );
   }
@@ -928,11 +1014,14 @@ class _GamificationDashboardState extends State<GamificationDashboard>
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white
-                  )
+                    color: Colors.white,
+                  ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue[700],
                     borderRadius: BorderRadius.circular(20),
@@ -951,13 +1040,15 @@ class _GamificationDashboardState extends State<GamificationDashboard>
             LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               backgroundColor: Colors.grey[800],
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Colors.greenAccent,
+              ),
               minHeight: 8,
             ),
             const SizedBox(height: 10),
             Text(
               "XP: $currentXp / $nextXp",
-              style: const TextStyle(color: Colors.white70)
+              style: const TextStyle(color: Colors.white70),
             ),
           ],
         ),
@@ -971,9 +1062,7 @@ class _GamificationDashboardState extends State<GamificationDashboard>
       onViewAll: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => BadgesPage(badges: badges),
-          ),
+          MaterialPageRoute(builder: (context) => BadgesPage(badges: badges)),
         );
       },
     );

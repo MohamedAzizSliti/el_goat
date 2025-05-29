@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
+import '../widgets/enhanced_app_bar.dart';
+import '../services/navigation_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -205,11 +207,63 @@ class _HomePageState extends State<HomePage> {
                   ),
 
                   const SizedBox(height: 24),
+                  // --- Quick Actions ---
+                  if (isUserConnected) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Quick Actions',
+                        style: TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          _QuickActionCard(
+                            icon: Icons.person,
+                            label: 'My Profile',
+                            color: Colors.blue,
+                            onTap:
+                                () => NavigationService.handleBottomNavigation(
+                                  context,
+                                  2,
+                                ),
+                          ),
+                          const SizedBox(width: 12),
+                          _QuickActionCard(
+                            icon: Icons.sports_soccer,
+                            label: 'Games',
+                            color: Colors.green,
+                            onTap:
+                                () => NavigationService.handleBottomNavigation(
+                                  context,
+                                  3,
+                                ),
+                          ),
+                          const SizedBox(width: 12),
+                          _QuickActionCard(
+                            icon: Icons.search,
+                            label: 'Search',
+                            color: Colors.orange,
+                            onTap:
+                                () => Navigator.pushNamed(context, '/search'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   // --- Join as ---
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'Join as',
+                      isUserConnected ? 'Explore Roles' : 'Join as',
                       style: TextStyle(
                         color: AppTheme.primaryColor,
                         fontSize: 20,
@@ -343,7 +397,6 @@ class _RoleCard extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   const _RoleCard({
-    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
@@ -367,6 +420,65 @@ class _RoleCard extends StatelessWidget {
               Icon(icon, size: 36, color: Colors.white),
               const SizedBox(height: 8),
               Text(label, style: const TextStyle(color: Colors.white)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.8),
+                color.withValues(alpha: 0.6),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 32, color: Colors.white),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),

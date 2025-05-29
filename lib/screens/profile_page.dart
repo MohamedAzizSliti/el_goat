@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../widgets/navbar/bottom_navbar.dart';
 import '../screens/chat_page.dart';
 import '../screens/ai_training_screen.dart';
 import '../models/footballer_profile_model.dart';
@@ -503,10 +502,6 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
             ),
           ),
         ),
-        bottomNavigationBar: BottomNavbar(
-          selectedIndex: _selectedIndex,
-          onItemTapped: _onItemTapped,
-        ),
       );
     }
 
@@ -526,341 +521,470 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: ShaderMask(
-          shaderCallback:
-              (bounds) => LinearGradient(
-                colors: [Colors.yellow[400]!, Colors.orange[400]!],
-              ).createShader(bounds),
-          child: const Text(
-            'My Profile',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Colors.blue[400]!, Colors.purple[400]!],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue[400]!.withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.message_rounded, color: Colors.white),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (_) => ChatScreen(
-                          otherUserId: data.userId,
-                          otherUserName: name,
-                          otherUserImage: image,
-                        ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0f0f23),
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f0f23),
-            ],
-            stops: [0.0, 0.3, 0.7, 1.0],
-          ),
-        ),
+      body: SingleChildScrollView(
         child: Column(
           children: [
-            // Beautiful Header Section
+            // Header Section (like club and scout profiles)
             Container(
-              height: 340,
-              child: Stack(
-                children: [
-                  // Background with gradient and pattern
-                  Container(
-                    height: 300,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.blue[600]!.withValues(alpha: 0.8),
-                          Colors.purple[600]!.withValues(alpha: 0.8),
-                          Colors.pink[500]!.withValues(alpha: 0.6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.green.withValues(alpha: 0.8), Colors.black],
+                ),
+              ),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    // App Bar
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'My Profile',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.message,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ChatScreen(
+                                        otherUserId: data.userId,
+                                        otherUserName: name,
+                                        otherUserImage: image,
+                                      ),
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(40),
-                        bottomRight: Radius.circular(40),
-                      ),
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(40),
-                          bottomRight: Radius.circular(40),
-                        ),
-                        image: const DecorationImage(
-                          image: AssetImage(
-                            'assets/images/football_field.jpeg',
-                          ),
-                          fit: BoxFit.cover,
-                          opacity: 0.3,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Profile content
-                  Positioned(
-                    top: 100,
-                    left: 0,
-                    right: 0,
-                    child: Column(
-                      children: [
-                        // Profile Image with animation
-                        ScaleTransition(
-                          scale: _headerScale,
-                          child: Container(
-                            width: 140,
-                            height: 140,
+                    // Profile Header Content
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        children: [
+                          // Player Avatar
+                          Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.yellow[400]!,
-                                  Colors.orange[500]!,
-                                ],
+                              border: Border.all(
+                                color: Colors.yellow,
+                                width: 3,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.yellow[400]!.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                  blurRadius: 30,
-                                  spreadRadius: 5,
-                                ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
+                                  color: Colors.yellow.withValues(alpha: 0.3),
                                   blurRadius: 20,
-                                  offset: const Offset(0, 10),
+                                  spreadRadius: 5,
                                 ),
                               ],
                             ),
-                            padding: const EdgeInsets.all(6),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: AssetImage(image),
-                                  fit: BoxFit.cover,
-                                ),
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 3,
-                                ),
-                              ),
+                            child: CircleAvatar(
+                              radius: 60,
+                              backgroundColor: Colors.grey[800],
+                              backgroundImage: AssetImage(image),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Name with gradient
-                        ShaderMask(
-                          shaderCallback:
-                              (bounds) => LinearGradient(
-                                colors: [Colors.white, Colors.yellow[200]!],
-                              ).createShader(bounds),
-                          child: Text(
+                          const SizedBox(height: 16),
+                          // Player Name
+                          Text(
                             name,
                             style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 28,
                               color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Position badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                          const SizedBox(height: 8),
+                          // Position
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.sports_soccer,
+                                color: Colors.grey,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                position,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withValues(alpha: 0.2),
-                                Colors.white.withValues(alpha: 0.1),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
+                          const SizedBox(height: 16),
+                          // Stats Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildStatItem('Age', age.toString()),
+                              _buildStatItem('Level', experience),
+                              _buildStatItem('XP', '1,250'),
+                            ],
                           ),
-                          child: Text(
-                            position,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
+                          const SizedBox(height: 20),
+                          // Action Buttons
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Expanded(
+                                    child: _buildActionButton(
+                                      'AI Training',
+                                      Icons.auto_awesome,
+                                      Colors.yellow,
+                                      () {
+                                        if (_profile != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => AITrainingScreen(
+                                                    player: _profile!,
+                                                  ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _buildActionButton(
+                                      'Game',
+                                      Icons.sports_soccer,
+                                      Colors.green,
+                                      () {
+                                        // Navigate to games page
+                                        Navigator.pushNamed(context, '/games');
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildActionButton(
+                                'Message',
+                                Icons.message,
+                                Colors.grey[700]!,
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => ChatScreen(
+                                            otherUserId: data.userId,
+                                            otherUserName: name,
+                                            otherUserImage: image,
+                                          ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-
-                  // Stats cards at bottom
-                  Positioned(
-                    bottom: 0,
-                    left: 20,
-                    right: 20,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            'Age',
-                            age.toString(),
-                            Icons.cake,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            'Level',
-                            experience,
-                            Icons.star,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            'XP',
-                            '1,250',
-                            Icons.trending_up,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
-            const SizedBox(height: 20),
-            // TabBar
+            // Tab Bar
             Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFF393E46),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
+              color: Colors.black,
               child: TabBar(
                 controller: _tabController,
                 indicatorColor: Colors.yellow,
                 labelColor: Colors.yellow,
-                unselectedLabelColor: Colors.white70,
-                tabs: const [
-                  Tab(icon: Icon(Icons.article), text: 'My Posts'),
-                  Tab(icon: Icon(Icons.info_outline), text: 'About Me'),
-                ],
+                unselectedLabelColor: Colors.grey,
+                labelStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+                tabs: const [Tab(text: 'My Posts'), Tab(text: 'About Me')],
               ),
             ),
-            // TabBarView
-            Expanded(
+            // Tab Views
+            Container(
+              height: 600, // Fixed height for tab content
               child: TabBarView(
                 controller: _tabController,
-                children: [
-                  // My Posts Tab
-                  _PostsTab(posts: _posts),
-                  // About Me Tab
-                  _AboutTab(profile: data),
-                ],
+                children: [_buildPostsTab(), _buildAboutMeTab(data)],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // AI Training Button
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Colors.green[400]!, Colors.blue[400]!],
+    );
+  }
+
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.yellow,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.black, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green[400]!.withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
             ),
-            child: FloatingActionButton(
-              onPressed: () {
-                if (_profile != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AITrainingScreen(player: _profile!),
-                    ),
-                  );
-                }
-              },
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              heroTag: "ai_training",
-              child: const Icon(
-                Icons.auto_awesome,
-                color: Colors.white,
-                size: 28,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostsTab() {
+    if (_posts.isEmpty) {
+      return const Center(
+        child: Text('No posts yet.', style: TextStyle(color: Colors.white70)),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: _posts.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder:
+          (_, i) => Card(
+            color: const Color(0xFF393E46),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ListTile(
+              title: Text(
+                _posts[i]['title'] ?? '',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                _posts[i]['content'] ?? '',
+                style: const TextStyle(color: Colors.white70),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          // Add Post Button (only on Posts tab)
-          if (_tabController.index == 0)
-            FloatingActionButton(
-              backgroundColor: Colors.yellow[700],
-              onPressed: _showAddPostDialog,
-              heroTag: "add_post",
-              child: const Icon(Icons.add, color: Colors.black),
+    );
+  }
+
+  Widget _buildAboutMeTab(FootballerProfileModel profile) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Bio Section
+          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.blue[600]!.withValues(alpha: 0.2),
+                    Colors.purple[600]!.withValues(alpha: 0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Colors.blue[400]!, Colors.purple[400]!],
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'About Me',
+                        style: TextStyle(
+                          color: Colors.yellow[400],
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    profile.bio!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 20),
+          ],
+          // Player Details Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.orange[600]!.withValues(alpha: 0.2),
+                  Colors.red[600]!.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Colors.orange[400]!, Colors.red[400]!],
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.sports_soccer,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Player Details',
+                      style: TextStyle(
+                        color: Colors.yellow[400],
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildInfoRow('Full Name', profile.fullName),
+                _buildInfoRow('Position', profile.position),
+                _buildInfoRow(
+                  'Age',
+                  _calculateAge(profile.dateOfBirth).toString(),
+                ),
+                _buildInfoRow('Experience', profile.experience),
+                if (profile.height != null)
+                  _buildInfoRow('Height', '${profile.height} cm'),
+                if (profile.weight != null)
+                  _buildInfoRow('Weight', '${profile.weight} kg'),
+                if (profile.preferredFoot != null)
+                  _buildInfoRow('Preferred Foot', profile.preferredFoot!),
+              ],
+            ),
+          ),
         ],
       ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -661,10 +661,6 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
                   );
                 },
               ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ),
     );
   }
 }

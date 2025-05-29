@@ -1,8 +1,8 @@
 import 'package:el_goat/screens/profile_page.dart';
+import 'package:el_goat/screens/scout_profil_page.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/profile_navigation_service.dart';
-import '../screens/scout_profile_page.dart';
 import '../screens/club_profil_page.dart';
 import '../screens/login_required_page.dart';
 
@@ -74,7 +74,9 @@ class _DynamicProfileWidgetState extends State<DynamicProfileWidget> {
       case 'footballer':
         return const FootballerProfilePage();
       case 'scout':
-        return const ScoutProfilePage();
+        return ScoutProfilePage(
+          scoutUserId: Supabase.instance.client.auth.currentUser!.id,
+        );
       case 'club':
         return ClubProfilePage(
           clubUserId: Supabase.instance.client.auth.currentUser!.id,
@@ -157,7 +159,9 @@ class ProfileRouterWidget extends StatelessWidget {
           case 'footballer':
             return const FootballerProfilePage();
           case 'scout':
-            return const ScoutProfilePage();
+            return ScoutProfilePage(
+              scoutUserId: Supabase.instance.client.auth.currentUser!.id,
+            );
           case 'club':
             return ClubProfilePage(
               clubUserId: Supabase.instance.client.auth.currentUser!.id,

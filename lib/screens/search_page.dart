@@ -4,7 +4,6 @@ import '../models/footballer_profile.dart';
 import '../models/scout_profile.dart';
 import '../models/club_profile.dart';
 import '../services/profile_service.dart';
-import '../widgets/navbar/bottom_navbar.dart';
 import '../widgets/country_selector.dart';
 import '../screens/profile_view_page.dart';
 import '../utils/countries.dart';
@@ -81,15 +80,16 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     try {
       var query = Supabase.instance.client.from('club_profiles').select();
 
-      if (league != null && league.isNotEmpty) {
-        query = query.eq('league', league);
-      }
+      // Note: league and division fields don't exist in current schema
+      // if (league != null && league.isNotEmpty) {
+      //   query = query.eq('league', league);
+      // }
       if (location != null && location.isNotEmpty) {
         query = query.ilike('location', '%$location%');
       }
-      if (division != null && division.isNotEmpty) {
-        query = query.eq('division', division);
-      }
+      // if (division != null && division.isNotEmpty) {
+      //   query = query.eq('division', division);
+      // }
 
       final response = await query.limit(50);
       return (response as List)
@@ -280,10 +280,6 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         foregroundColor: Colors.black,
         icon: const Icon(Icons.public),
         label: const Text('Countries'),
-      ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
       ),
     );
   }

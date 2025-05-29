@@ -15,11 +15,8 @@ class ProfileService {
       final user = _supabase.auth.currentUser;
       if (user == null) return null;
 
-      final response = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .single();
+      final response =
+          await _supabase.from('profiles').select().eq('id', user.id).single();
 
       return UserProfile.fromJson(response);
     } catch (e) {
@@ -31,11 +28,12 @@ class ProfileService {
   // Get footballer profile
   static Future<FootballerProfile?> getFootballerProfile(String userId) async {
     try {
-      final response = await _supabase
-          .from('footballer_profiles')
-          .select()
-          .eq('user_id', userId)
-          .single();
+      final response =
+          await _supabase
+              .from('footballer_profiles')
+              .select()
+              .eq('user_id', userId)
+              .single();
 
       return FootballerProfile.fromJson(response);
     } catch (e) {
@@ -47,11 +45,12 @@ class ProfileService {
   // Get scout profile
   static Future<ScoutProfile?> getScoutProfile(String userId) async {
     try {
-      final response = await _supabase
-          .from('scout_profiles')
-          .select()
-          .eq('user_id', userId)
-          .single();
+      final response =
+          await _supabase
+              .from('scout_profiles')
+              .select()
+              .eq('user_id', userId)
+              .single();
 
       return ScoutProfile.fromJson(response);
     } catch (e) {
@@ -63,11 +62,12 @@ class ProfileService {
   // Get club profile
   static Future<ClubProfile?> getClubProfile(String userId) async {
     try {
-      final response = await _supabase
-          .from('club_profiles')
-          .select()
-          .eq('user_id', userId)
-          .single();
+      final response =
+          await _supabase
+              .from('club_profiles')
+              .select()
+              .eq('user_id', userId)
+              .single();
 
       return ClubProfile.fromJson(response);
     } catch (e) {
@@ -121,11 +121,12 @@ class ProfileService {
   // Get user role
   static Future<String?> getUserRole(String userId) async {
     try {
-      final response = await _supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .single();
+      final response =
+          await _supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', userId)
+              .single();
 
       return response['role'] as String?;
     } catch (e) {
@@ -197,9 +198,10 @@ class ProfileService {
       if (location != null) {
         query = query.ilike('location', '%$location%');
       }
-      if (league != null) {
-        query = query.eq('league', league);
-      }
+      // Note: league field doesn't exist in current schema, so we skip it
+      // if (league != null) {
+      //   query = query.eq('league', league);
+      // }
 
       final response = await query;
       return (response as List)

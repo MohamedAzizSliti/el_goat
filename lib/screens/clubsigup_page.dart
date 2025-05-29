@@ -49,7 +49,6 @@ class _ClubSignUpPageState extends State<ClubSignUpPage> {
     setState(() => _isSaving = true);
 
     try {
-      final user = _supabase.auth.currentUser;
       // Combine country and location for now until migration is applied
       final locationWithCountry =
           _selectedCountry != null
@@ -58,7 +57,6 @@ class _ClubSignUpPageState extends State<ClubSignUpPage> {
 
       await _supabase.from('club_profiles').insert({
         'user_id': widget.userId,
-        'email': user?.email,
         'club_name': _clubNameCtrl.text.trim(),
         'location': locationWithCountry,
         'website':

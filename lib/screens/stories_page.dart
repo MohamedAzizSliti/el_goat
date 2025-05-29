@@ -179,10 +179,6 @@ class _StoriesPageState extends State<StoriesPage> {
           },
         ),
       ),
-      bottomNavigationBar: BottomNavbar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
-      ),
     );
   }
 }
