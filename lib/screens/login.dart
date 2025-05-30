@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
       // At this point session exists:
-      Navigator.pushReplacementNamed(context, '/');
+      Navigator.pushReplacementNamed(context, '/accueil');
     } on AuthException catch (err) {
       ScaffoldMessenger.of(
         context,

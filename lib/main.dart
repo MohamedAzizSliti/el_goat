@@ -23,6 +23,8 @@ import 'screens/ratings_page.dart';
 import 'screens/login_required_page.dart';
 import 'screens/search_page.dart';
 import 'screens/countries_list_page.dart';
+import 'screens/conversations_screen.dart';
+import 'services/message_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -33,6 +35,9 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bWZxYnZ4ZGhjZ2F3eGZ2aHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2NjAyMDcsImV4cCI6MjA2MTIzNjIwN30.U0hCS3Q9oWaAGKBhmFHvAGU_ZeLMR6Wh0nvTFBBtoMQ',
   );
+
+  // Initialize messaging service
+  await MessageService().initialize();
 
   AppLifecycleReactor().start();
 
@@ -89,7 +94,10 @@ class MyApp extends StatelessWidget {
         '/login': (ctx) => const LoginPage(),
         '/accueil': (ctx) => const AcceuilPage(),
         '/footballer_profile': (ctx) => FootballerProfilePage(),
-        '/scout_profile': (ctx) =>  ScoutProfilePage(scoutUserId:Supabase.instance.client.auth.currentUser!.id,),
+        '/scout_profile':
+            (ctx) => ScoutProfilePage(
+              scoutUserId: Supabase.instance.client.auth.currentUser!.id,
+            ),
         '/club_profile':
             (ctx) => ClubProfilePage(
               clubUserId: Supabase.instance.client.auth.currentUser!.id,
@@ -117,6 +125,7 @@ class MyApp extends StatelessWidget {
         '/notifications': (ctx) => const NotificationsPage(),
         '/ratings': (ctx) => const RatingsPage(),
         '/login_required': (ctx) => const LoginRequiredPage(),
+        '/conversations': (ctx) => const ConversationsScreen(),
       },
     );
   }

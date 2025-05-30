@@ -6,6 +6,7 @@ import '../models/club_profile.dart';
 import '../services/profile_service.dart';
 import '../widgets/country_selector.dart';
 import '../screens/profile_view_page.dart';
+import '../services/user_profile_navigator.dart';
 import '../utils/countries.dart';
 
 enum UserType { footballer, scout, club }
@@ -785,12 +786,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 ? Icon(Icons.verified, color: Colors.blue[400])
                 : null,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProfileViewPage(userId: footballer.userId),
-            ),
-          );
+          UserProfileNavigator.navigateFromSearchResult(context, {
+            'user_id': footballer.userId,
+            'role': 'footballer',
+            'name': footballer.fullName,
+            'position': footballer.position,
+            'age': footballer.age,
+          });
         },
       ),
     );
@@ -853,12 +855,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 ? Icon(Icons.verified, color: Colors.blue[400])
                 : null,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProfileViewPage(userId: scout.userId),
-            ),
-          );
+          UserProfileNavigator.navigateFromSearchResult(context, {
+            'user_id': scout.userId,
+            'role': 'scout',
+            'name': scout.fullName,
+            'level': scout.scoutingLevel,
+            'country': scout.country,
+          });
         },
       ),
     );
@@ -918,12 +921,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 ? Icon(Icons.verified, color: Colors.blue[400])
                 : null,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProfileViewPage(userId: club.userId),
-            ),
-          );
+          UserProfileNavigator.navigateFromSearchResult(context, {
+            'user_id': club.userId,
+            'role': 'club',
+            'name': club.clubName,
+            'league': club.leagueDisplay,
+            'location': club.location,
+          });
         },
       ),
     );

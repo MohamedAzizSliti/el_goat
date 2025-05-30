@@ -1,9 +1,4 @@
-enum RecommendationType {
-  highlyRecommend,
-  recommend,
-  consider,
-  notRecommend,
-}
+enum RecommendationType { highlyRecommend, recommend, consider, notRecommend }
 
 extension RecommendationTypeExtension on RecommendationType {
   String get value {
@@ -153,14 +148,17 @@ class ScoutEvaluation {
       attitude: json['attitude'] as int,
       overallRating: json['overall_rating'] as int,
       potentialRating: json['potential_rating'] as int,
-      recommendation: RecommendationTypeExtension.fromString(json['recommendation'] as String),
+      recommendation: RecommendationTypeExtension.fromString(
+        json['recommendation'] as String,
+      ),
       strengths: json['strengths'] as String?,
       areasForImprovement: json['areas_for_improvement'] as String?,
       additionalNotes: json['additional_notes'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String) 
-          : null,
+      updatedAt:
+          json['updated_at'] != null
+              ? DateTime.parse(json['updated_at'] as String)
+              : null,
     );
   }
 
@@ -169,7 +167,8 @@ class ScoutEvaluation {
       'id': id,
       'scout_id': scoutId,
       'player_id': playerId,
-      'evaluation_date': evaluationDate.toIso8601String().split('T')[0], // Date only
+      'evaluation_date':
+          evaluationDate.toIso8601String().split('T')[0], // Date only
       'match_context': matchContext,
       'player_position': playerPosition,
       'ball_control': ballControl,
@@ -202,8 +201,13 @@ class ScoutEvaluation {
 
   // Calculate average technical skills
   double get averageTechnicalSkills {
-    return (ballControl + passingAccuracy + shootingAbility + 
-            dribblingSkills + crossingAbility + headingAbility) / 6.0;
+    return (ballControl +
+            passingAccuracy +
+            shootingAbility +
+            dribblingSkills +
+            crossingAbility +
+            headingAbility) /
+        6.0;
   }
 
   // Calculate average physical attributes
@@ -213,8 +217,13 @@ class ScoutEvaluation {
 
   // Calculate average mental attributes
   double get averageMentalAttributes {
-    return (decisionMaking + positioning + communication + 
-            leadership + workRate + attitude) / 6.0;
+    return (decisionMaking +
+            positioning +
+            communication +
+            leadership +
+            workRate +
+            attitude) /
+        6.0;
   }
 
   ScoutEvaluation copyWith({

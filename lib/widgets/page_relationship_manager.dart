@@ -5,9 +5,13 @@ import '../services/profile_navigation_service.dart';
 
 class PageRelationshipManager {
   /// Handles navigation between all pages with proper conditions
-  static void navigateWithConditions(BuildContext context, String destination, {Map<String, dynamic>? arguments}) {
+  static void navigateWithConditions(
+    BuildContext context,
+    String destination, {
+    Map<String, dynamic>? arguments,
+  }) {
     final userId = Supabase.instance.client.auth.currentUser?.id;
-    
+
     switch (destination) {
       case 'profile':
         _handleProfileNavigation(context);
@@ -64,19 +68,25 @@ class PageRelationshipManager {
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
-  static void _handleSearchNavigation(BuildContext context, Map<String, dynamic>? arguments) {
+  static void _handleSearchNavigation(
+    BuildContext context,
+    Map<String, dynamic>? arguments,
+  ) {
     Navigator.pushNamed(context, '/search', arguments: arguments);
   }
 
-  static void _handleChatNavigation(BuildContext context, Map<String, dynamic>? arguments) {
+  static void _handleChatNavigation(
+    BuildContext context,
+    Map<String, dynamic>? arguments,
+  ) {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) {
       _showAuthRequiredDialog(context, 'chat');
       return;
     }
-    
-    if (arguments != null && 
-        arguments.containsKey('otherUserId') && 
+
+    if (arguments != null &&
+        arguments.containsKey('otherUserId') &&
         arguments.containsKey('otherUserName')) {
       Navigator.pushNamed(context, '/chat', arguments: arguments);
     } else {
@@ -111,42 +121,53 @@ class PageRelationshipManager {
   static void _showAuthRequiredDialog(BuildContext context, String feature) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Row(
-          children: [
-            Icon(Icons.lock_outline, color: Colors.yellow, size: 24),
-            const SizedBox(width: 8),
-            const Text(
-              'Login Required',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-          ],
-        ),
-        content: Text(
-          'You need to be logged in to access ${feature}. Please login or create an account to continue.',
-          style: const TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/login');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.yellow,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            title: Row(
+              children: [
+                Icon(Icons.lock_outline, color: Colors.yellow, size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Login Required',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            child: const Text('Login'),
+            content: Text(
+              'You need to be logged in to access ${feature}. Please login or create an account to continue.',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.yellow,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Login'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
@@ -229,11 +250,7 @@ class ConditionalWrapper extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.lock_outline,
-              size: 80,
-              color: Colors.grey[600],
-            ),
+            Icon(Icons.lock_outline, size: 80, color: Colors.grey[600]),
             const SizedBox(height: 16),
             Text(
               'Authentication Required',
@@ -246,18 +263,20 @@ class ConditionalWrapper extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Please login to access this feature',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: onAuthRequired ?? () => Navigator.pushNamed(context, '/login'),
+              onPressed:
+                  onAuthRequired ??
+                  () => Navigator.pushNamed(context, '/login'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellow,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
               child: const Text('Login'),
             ),
@@ -274,11 +293,7 @@ class ConditionalWrapper extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_off_outlined,
-              size: 80,
-              color: Colors.grey[600],
-            ),
+            Icon(Icons.person_off_outlined, size: 80, color: Colors.grey[600]),
             const SizedBox(height: 16),
             Text(
               'Access Restricted',
@@ -291,18 +306,20 @@ class ConditionalWrapper extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'This feature requires ${requiredRole} role',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: onRoleRequired ?? () => Navigator.pushNamed(context, '/registration'),
+              onPressed:
+                  onRoleRequired ??
+                  () => Navigator.pushNamed(context, '/registration'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.yellow,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
               child: const Text('Complete Profile'),
             ),

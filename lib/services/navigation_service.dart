@@ -7,6 +7,8 @@ class NavigationService {
 
   /// Main navigation handler for bottom navigation bar
   static void handleBottomNavigation(BuildContext context, int index) {
+    // Note: Navigation is now handled by MainNavigation PageController
+    // This method is kept for backward compatibility
     switch (index) {
       case 0: // Home
         _navigateToHome(context);
@@ -14,11 +16,14 @@ class NavigationService {
       case 1: // News
         _navigateToNews(context);
         break;
-      case 2: // Profile
-        _navigateToProfile(context);
+      case 2: // Games (for footballers) or Messages (for others)
+        // This will be handled dynamically by the main navigation
         break;
-      case 3: // Games
-        _navigateToGames(context);
+      case 3: // Messages (for footballers) or Profile (for others)
+        // This will be handled dynamically by the main navigation
+        break;
+      case 4: // Profile (for footballers only)
+        // This will be handled dynamically by the main navigation
         break;
     }
   }
@@ -31,6 +36,11 @@ class NavigationService {
   /// Navigate to News page
   static void _navigateToNews(BuildContext context) {
     Navigator.pushNamed(context, '/news_home');
+  }
+
+  /// Navigate to Messages page
+  static void _navigateToMessages(BuildContext context) {
+    Navigator.pushNamed(context, '/conversations');
   }
 
   /// Navigate to Profile page (dynamic based on user role)
@@ -66,7 +76,10 @@ class NavigationService {
   }
 
   /// Navigate to login if not authenticated
-  static void requireAuthentication(BuildContext context, VoidCallback onAuthenticated) {
+  static void requireAuthentication(
+    BuildContext context,
+    VoidCallback onAuthenticated,
+  ) {
     if (isUserAuthenticated()) {
       onAuthenticated();
     } else {
@@ -75,7 +88,11 @@ class NavigationService {
   }
 
   /// Navigate to specific profile type
-  static void navigateToSpecificProfile(BuildContext context, String profileType, {String? userId}) {
+  static void navigateToSpecificProfile(
+    BuildContext context,
+    String profileType, {
+    String? userId,
+  }) {
     final targetUserId = userId ?? getCurrentUserId();
     if (targetUserId == null) {
       Navigator.pushNamed(context, '/login');
@@ -101,7 +118,8 @@ class NavigationService {
   }
 
   /// Navigate to chat with specific user
-  static void navigateToChat(BuildContext context, {
+  static void navigateToChat(
+    BuildContext context, {
     required String otherUserId,
     required String otherUserName,
     String? otherUserImage,
@@ -123,7 +141,8 @@ class NavigationService {
   }
 
   /// Navigate to search page with optional filters
-  static void navigateToSearch(BuildContext context, {
+  static void navigateToSearch(
+    BuildContext context, {
     String? searchQuery,
     String? profileType,
     String? country,
@@ -226,34 +245,38 @@ class NavigationService {
   static void showAuthRequiredDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text(
-          'Authentication Required',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'You need to be logged in to access this feature.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/login');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.yellow,
-              foregroundColor: Colors.black,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Authentication Required',
+              style: TextStyle(color: Colors.white),
             ),
-            child: const Text('Login'),
+            content: const Text(
+              'You need to be logged in to access this feature.',
+              style: TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.yellow,
+                  foregroundColor: Colors.black,
+                ),
+                child: const Text('Login'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

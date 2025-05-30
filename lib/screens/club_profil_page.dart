@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/navigation_service.dart';
 import 'chat_page.dart';
+import '../widgets/beautiful_logout_button.dart';
 
 class ClubProfilePage extends StatefulWidget {
   final String clubUserId;
-  const ClubProfilePage({Key? key, required this.clubUserId}) : super(key: key);
+  final bool isViewingOtherUser;
+
+  const ClubProfilePage({
+    Key? key,
+    required this.clubUserId,
+    this.isViewingOtherUser = false,
+  }) : super(key: key);
 
   @override
   State<ClubProfilePage> createState() => _ClubProfilePageState();
@@ -105,7 +112,9 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                         ),
                         const Spacer(),
                         Text(
-                          club['club_name'] ?? 'Club Profile',
+                          widget.isViewingOtherUser
+                              ? (club['club_name'] ?? 'Club Profile')
+                              : 'My Club',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -113,23 +122,35 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                           ),
                         ),
                         const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.message, color: Colors.white),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => ChatScreen(
-                                      otherUserId: widget.clubUserId,
-                                      otherUserName:
-                                          club['club_name'] ?? 'Club',
-                                      otherUserImage: '',
-                                    ),
-                              ),
-                            );
-                          },
-                        ),
+                        if (widget.isViewingOtherUser)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.message,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ChatScreen(
+                                        otherUserId: widget.clubUserId,
+                                        otherUserName:
+                                            club['club_name'] ?? 'Club',
+                                        otherUserImage: '',
+                                      ),
+                                ),
+                              );
+                            },
+                          )
+                        else
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.white),
+                            onPressed: () {
+                              // Navigate to edit club profile
+                              // TODO: Implement edit club profile functionality
+                            },
+                          ),
                       ],
                     ),
                   ),
@@ -204,36 +225,71 @@ class _ClubProfilePageState extends State<ClubProfilePage>
                         ),
                         const SizedBox(height: 20),
                         // Action Buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildActionButton(
-                              'Follow',
-                              Icons.add,
-                              Colors.yellow,
-                              () {},
-                            ),
-                            _buildActionButton(
-                              'Message',
-                              Icons.message,
-                              Colors.grey[700]!,
-                              () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => ChatScreen(
-                                          otherUserId: widget.clubUserId,
-                                          otherUserName:
-                                              club['club_name'] ?? 'Club',
-                                          otherUserImage: '',
-                                        ),
+                        if (widget.isViewingOtherUser)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildActionButton(
+                                'Follow',
+                                Icons.add,
+                                Colors.yellow,
+                                () {},
+                              ),
+                              _buildActionButton(
+                                'Message',
+                                Icons.message,
+                                Colors.blue,
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => ChatScreen(
+                                            otherUserId: widget.clubUserId,
+                                            otherUserName:
+                                                club['club_name'] ?? 'Club',
+                                            otherUserImage: '',
+                                          ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          )
+                        else
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _buildActionButton(
+                                    'Edit Club',
+                                    Icons.edit,
+                                    Colors.yellow,
+                                    () {
+                                      // TODO: Navigate to edit club profile
+                                    },
                                   ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                                  _buildActionButton(
+                                    'Manage',
+                                    Icons.settings,
+                                    Colors.grey[700]!,
+                                    () {
+                                      // TODO: Navigate to club management
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Beautiful Logout Button
+                              const BeautifulLogoutButton(
+                                customText: 'Logout',
+                                customIcon: Icons.logout_rounded,
+                                showConfirmDialog: true,
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),

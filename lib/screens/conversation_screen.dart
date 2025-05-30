@@ -32,10 +32,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredConversations = _conversations.where((convo) {
-      final name = convo['name']?.toLowerCase() ?? '';
-      return name.contains(_searchQuery.toLowerCase());
-    }).toList();
+    final filteredConversations =
+        _conversations.where((convo) {
+          final name =
+              (convo['other_user_name'] ?? convo['name'] ?? '').toLowerCase();
+          return name.contains(_searchQuery.toLowerCase());
+        }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -60,63 +62,80 @@ class _ConversationScreenState extends State<ConversationScreen> {
             ),
           ),
           Expanded(
-            child: _conversations.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : filteredConversations.isEmpty
+            child:
+                _conversations.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredConversations.isEmpty
                     ? const Center(child: Text("No results found"))
                     : ListView.builder(
-                        itemCount: filteredConversations.length,
-                        itemBuilder: (context, index) {
-                          final convo = filteredConversations[index];
-                          final timestamp = convo['createdAt'] != null
-                              ? timeago.format(DateTime.parse(convo['createdAt']).toLocal())
-                              : '';
+                      itemCount: filteredConversations.length,
+                      itemBuilder: (context, index) {
+                        final convo = filteredConversations[index];
+                        final timestamp =
+                            convo['createdAt'] != null
+                                ? timeago.format(
+                                  DateTime.parse(convo['createdAt']).toLocal(),
+                                )
+                                : '';
 
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: convo['avatar'].toString().startsWith('http')
-                                  ? NetworkImage(convo['avatar'])
-                                  : AssetImage(convo['avatar']) as ImageProvider,
-                            ),
-                            title: Text(convo['name'] ?? 'Utilisateur'),
-                            subtitle: Text(convo['lastMessage'] ?? ''),
-                            trailing: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(timestamp, style: const TextStyle(fontSize: 12)),
-                                if (convo['unreadCount'] > 0)
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 4),
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      '${convo['unreadCount']}',
-                                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                                    ),
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage:
+                                convo['avatar'].toString().startsWith('http')
+                                    ? NetworkImage(convo['avatar'])
+                                    : AssetImage(convo['avatar'])
+                                        as ImageProvider,
+                          ),
+                          title: Text(
+                            convo['other_user_name'] ??
+                                convo['name'] ??
+                                'Utilisateur',
+                          ),
+                          subtitle: Text(convo['lastMessage'] ?? ''),
+                          trailing: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                timestamp,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              if (convo['unreadCount'] > 0)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
                                   ),
-                              ],
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ChatScreen(
-                                    otherUserId: convo['userId'],
-                                    otherUserName: convo['name'],
-                                    otherUserImage: convo['avatar'],
+                                  child: Text(
+                                    '${convo['unreadCount']}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
-                          );
-                        },
-                      ),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => ChatScreen(
+                                      otherUserId: convo['userId'],
+                                      otherUserName: convo['name'],
+                                      otherUserImage: convo['avatar'],
+                                    ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
           ),
         ],
       ),
     );
   }
-}    
+}

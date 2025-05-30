@@ -35,9 +35,10 @@ class LoginPage extends StatelessWidget {
                 const Text(
                   "GOAT",
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -45,9 +46,10 @@ class LoginPage extends StatelessWidget {
                   children: [
                     Column(
                       children: [
-                        const Text("Login",
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 16)),
+                        const Text(
+                          "Login",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                         const SizedBox(height: 4),
                         const CircleAvatar(
                           radius: 4,
@@ -56,18 +58,16 @@ class LoginPage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(width: 10),
-                    Container(
-                      height: 10,
-                      width: 1,
-                      color: Colors.white,
-                    ),
+                    Container(height: 10, width: 1, color: Colors.white),
                     const SizedBox(width: 10),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, '/registration');
                       },
-                      child: const Text("Sign up",
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
+                      child: const Text(
+                        "Sign up",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
                     ),
                   ],
                 ),
@@ -81,8 +81,9 @@ class LoginPage extends StatelessWidget {
                     fillColor: Colors.grey[800],
                     prefixIcon: const Icon(Icons.email, color: Colors.white),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none),
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 15),
@@ -96,25 +97,30 @@ class LoginPage extends StatelessWidget {
                     fillColor: Colors.grey[800],
                     prefixIcon: const Icon(Icons.lock, color: Colors.white),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none),
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/');
+                    Navigator.pushNamed(context, '/accueil');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.yellow,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 80, vertical: 15),
+                      horizontal: 80,
+                      vertical: 15,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text("Login",
-                      style: TextStyle(color: Colors.black, fontSize: 18)),
+                  child: const Text(
+                    "Login",
+                    style: TextStyle(color: Colors.black, fontSize: 18),
+                  ),
                 ),
               ],
             ),

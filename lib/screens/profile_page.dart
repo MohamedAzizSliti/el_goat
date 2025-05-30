@@ -6,9 +6,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/chat_page.dart';
 import '../screens/ai_training_screen.dart';
 import '../models/footballer_profile_model.dart';
+import '../widgets/beautiful_logout_button.dart';
 
 class FootballerProfilePage extends StatefulWidget {
-  const FootballerProfilePage({Key? key}) : super(key: key);
+  final String? userId;
+  final bool isViewingOtherUser;
+
+  const FootballerProfilePage({
+    Key? key,
+    this.userId,
+    this.isViewingOtherUser = false,
+  }) : super(key: key);
 
   @override
   State<FootballerProfilePage> createState() => _FootballerProfilePageState();
@@ -52,10 +60,15 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
 
   Future<void> _fetchLatestProfile() async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
+      // Use provided userId or current user's ID
+      final targetUserId =
+          widget.userId ?? Supabase.instance.client.auth.currentUser?.id;
+      if (targetUserId == null) {
         setState(() {
-          _error = 'Please log in to view your profile';
+          _error =
+              widget.isViewingOtherUser
+                  ? 'User profile not found'
+                  : 'Please log in to view your profile';
           _isLoading = false;
         });
         return;
@@ -66,7 +79,7 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
           await Supabase.instance.client
               .from('user_roles')
               .select('role')
-              .eq('user_id', userId)
+              .eq('user_id', targetUserId)
               .maybeSingle();
 
       if (roleResponse == null || roleResponse['role'] == null) {
@@ -85,7 +98,7 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
           await Supabase.instance.client
               .from('${role}_profiles')
               .select()
-              .eq('user_id', userId)
+              .eq('user_id', targetUserId)
               .maybeSingle();
 
       if (profileResponse == null) {
@@ -550,7 +563,9 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                           ),
                           const Spacer(),
                           Text(
-                            'My Profile',
+                            widget.isViewingOtherUser
+                                ? 'Profile'
+                                : 'My Profile',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -558,25 +573,58 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                             ),
                           ),
                           const Spacer(),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.message,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => ChatScreen(
-                                        otherUserId: data.userId,
-                                        otherUserName: name,
-                                        otherUserImage: image,
+                          if (widget.isViewingOtherUser)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.message,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                // Check if user is authenticated
+                                final currentUser =
+                                    Supabase.instance.client.auth.currentUser;
+                                if (currentUser == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please log in to send messages',
                                       ),
-                                ),
-                              );
-                            },
-                          ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                try {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => ChatScreen(
+                                            otherUserId: data.userId,
+                                            otherUserName: name,
+                                            otherUserImage: image,
+                                          ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error opening chat: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                            )
+                          else
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white),
+                              onPressed: () {
+                                // Navigate to edit profile
+                                // TODO: Implement edit profile functionality
+                              },
+                            ),
                         ],
                       ),
                     ),
@@ -650,52 +698,82 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                           ),
                           const SizedBox(height: 20),
                           // Action Buttons
-                          Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Expanded(
-                                    child: _buildActionButton(
-                                      'AI Training',
-                                      Icons.auto_awesome,
-                                      Colors.yellow,
-                                      () {
-                                        if (_profile != null) {
-                                          Navigator.push(
+                          if (!widget.isViewingOtherUser)
+                            Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Expanded(
+                                      child: _buildActionButton(
+                                        'AI Training',
+                                        Icons.auto_awesome,
+                                        Colors.yellow,
+                                        () {
+                                          if (_profile != null) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        AITrainingScreen(
+                                                          player: _profile!,
+                                                        ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: _buildActionButton(
+                                        'Game',
+                                        Icons.sports_soccer,
+                                        Colors.green,
+                                        () {
+                                          // Navigate to games page
+                                          Navigator.pushNamed(
                                             context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) => AITrainingScreen(
-                                                    player: _profile!,
-                                                  ),
-                                            ),
+                                            '/games',
                                           );
-                                        }
-                                      },
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _buildActionButton(
-                                      'Game',
-                                      Icons.sports_soccer,
-                                      Colors.green,
-                                      () {
-                                        // Navigate to games page
-                                        Navigator.pushNamed(context, '/games');
-                                      },
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                // Beautiful Logout Button
+                                const BeautifulLogoutButton(
+                                  customText: 'Logout',
+                                  customIcon: Icons.logout_rounded,
+                                  showConfirmDialog: true,
+                                ),
+                              ],
+                            )
+                          else
+                            _buildActionButton(
+                              'Message',
+                              Icons.message,
+                              Colors.blue,
+                              () {
+                                // Check if user is authenticated
+                                final currentUser =
+                                    Supabase.instance.client.auth.currentUser;
+                                if (currentUser == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please log in to send messages',
+                                      ),
+                                      backgroundColor: Colors.red,
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              _buildActionButton(
-                                'Message',
-                                Icons.message,
-                                Colors.grey[700]!,
-                                () {
+                                  );
+                                  return;
+                                }
+
+                                try {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -707,10 +785,16 @@ class _FootballerProfilePageState extends State<FootballerProfilePage>
                                           ),
                                     ),
                                   );
-                                },
-                              ),
-                            ],
-                          ),
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error opening chat: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
                         ],
                       ),
                     ),

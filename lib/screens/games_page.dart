@@ -191,15 +191,20 @@ class _GamificationDashboardState extends State<GamificationDashboard>
             }).toList(),
           );
 
-      setState(() {
-        xpData = xpRes;
-        badges = List<Map<String, dynamic>>.from(badgeRes);
-        challengesWithStatus = challengesFormatted;
-        gamesWithStatus = gamesFormatted;
-        skillCategories = skillService.getAllCategories();
-      });
+      // Check if widget is still mounted before calling setState
+      if (mounted) {
+        setState(() {
+          xpData = xpRes;
+          badges = List<Map<String, dynamic>>.from(badgeRes);
+          challengesWithStatus = challengesFormatted;
+          gamesWithStatus = gamesFormatted;
+          skillCategories = skillService.getAllCategories();
+        });
+      }
     } catch (e) {
-      print("Error fetching data: $e");
+      if (mounted) {
+        print("Error fetching data: $e");
+      }
     }
   }
 

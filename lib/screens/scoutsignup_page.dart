@@ -105,118 +105,263 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
     }
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.blue[400]!.withValues(alpha: 0.2),
+            Colors.purple[400]!.withValues(alpha: 0.2),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue[400]!.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.blue[400], size: 20),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.blue[400],
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLabel(String text) => Padding(
-    padding: const EdgeInsets.only(top: 12, bottom: 4),
+    padding: const EdgeInsets.only(top: 16, bottom: 8),
     child: Text(
       text,
-      style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500),
-    ),
-  );
-
-  Widget _buildTextField(
-    String hint,
-    TextEditingController controller, {
-    TextInputType keyboard = TextInputType.text,
-    String? Function(String?)? validator,
-  }) => TextFormField(
-    controller: controller,
-    style: const TextStyle(color: Colors.white),
-    keyboardType: keyboard,
-    decoration: InputDecoration(
-      filled: true,
-      fillColor: Colors.grey[800],
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.grey),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
       ),
     ),
-    validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
   );
 
-  Widget _buildDropdown(
+  Widget _buildField(
+    TextEditingController ctrl,
+    String hint, {
+    TextInputType keyboard = TextInputType.text,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: TextFormField(
+        controller: ctrl,
+        keyboardType: keyboard,
+        maxLines: maxLines,
+        style: const TextStyle(color: Colors.white, fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 16,
+          ),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.1),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blue[400]!, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
+          ),
+        ),
+        validator:
+            validator ??
+            (v) => v == null || v.isEmpty ? 'Ce champ est requis' : null,
+      ),
+    );
+  }
+
+  Widget _buildModernDropdown(
     List<String> items,
     String? value,
+    String hint,
     void Function(String?) onChanged,
-  ) => DropdownButtonFormField<String>(
-    value: value,
-    dropdownColor: Colors.grey[900],
-    style: const TextStyle(color: Colors.white),
-    decoration: InputDecoration(
-      filled: true,
-      fillColor: Colors.grey[800],
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        dropdownColor: Colors.grey[900],
+        style: const TextStyle(color: Colors.white, fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 16,
+          ),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.1),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.blue[400]!, width: 2),
+          ),
+        ),
+        items:
+            items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
+        onChanged: onChanged,
+        validator:
+            (v) => (v == null || v.isEmpty) ? 'Ce champ est requis' : null,
       ),
-    ),
-    items:
-        items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-    onChanged: onChanged,
-    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-  );
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Scout Profile'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Scout Sign Up',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2C),
-              borderRadius: BorderRadius.circular(16),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0f0f23),
+              Color(0xFF1a1a2e),
+              Color(0xFF16213e),
+              Color(0xFF0f0f23),
+            ],
+            stops: [0.0, 0.3, 0.7, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Center(
-                    child: Text(
-                      'Complete Scout Profile',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  // Header Section
+                  Center(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              colors: [Colors.blue[400]!, Colors.purple[400]!],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue[400]!.withValues(alpha: 0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.search,
+                            size: 40,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Scout Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Complete your scout information',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
 
-                  // Display user info from registration
+                  const SizedBox(height: 32),
+
+                  // Account Information Section
+                  _buildSectionTitle('Account Information'),
+                  const SizedBox(height: 16),
+
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.grey[800]?.withValues(alpha: 0.5),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[600]!, width: 1),
+                      border: Border.all(
+                        color: Colors.blue[400]!.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Account Information',
-                          style: TextStyle(
-                            color: Colors.grey[300],
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Icon(
                               Icons.person,
-                              color: Colors.grey[400],
+                              color: Colors.blue[400],
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -225,16 +370,17 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Icon(
                               Icons.email,
-                              color: Colors.grey[400],
+                              color: Colors.blue[400],
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -243,6 +389,7 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -251,20 +398,27 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     ),
                   ),
 
-                  _buildLabel('Phone Number'),
-                  _buildTextField(
-                    'Enter phone',
+                  const SizedBox(height: 24),
+
+                  // Personal Information Section
+                  _buildSectionTitle('Personal Information'),
+                  const SizedBox(height: 16),
+
+                  _buildLabel('Numéro de téléphone'),
+                  _buildField(
                     _phoneCtrl,
+                    'Entrez votre numéro de téléphone',
                     keyboard: TextInputType.phone,
                     validator: (v) {
                       final val = v!.trim();
                       if (!RegExp(r'^\d{8,15}$').hasMatch(val)) {
-                        return 'Enter 8–15 digits';
+                        return 'Entrez 8-15 chiffres';
                       }
                       return null;
                     },
                   ),
-                  _buildLabel('Country'),
+
+                  _buildLabel('Pays'),
                   CountrySelector(
                     selectedCountry: _selectedCountry,
                     onCountrySelected: (country) {
@@ -272,50 +426,69 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     },
                     showFlags: true,
                     showPopularFirst: true,
-                    hintText: 'Select your country',
+                    hintText: 'Sélectionnez votre pays',
                   ),
-                  _buildLabel('City'),
-                  _buildTextField('Enter your city', _cityCtrl),
-                  _buildLabel('Scouting Level'),
-                  _buildDropdown(
+
+                  _buildLabel('Ville / Région'),
+                  _buildField(_cityCtrl, 'Ex: Tunis, Sfax, Paris, Madrid...'),
+
+                  const SizedBox(height: 24),
+
+                  // Professional Information Section
+                  _buildSectionTitle('Professional Information'),
+                  const SizedBox(height: 16),
+
+                  _buildLabel('Niveau de scouting'),
+                  _buildModernDropdown(
                     _scoutingLevels,
                     _selectedScoutingLevel,
+                    'Sélectionnez votre niveau',
                     (val) => setState(() => _selectedScoutingLevel = val),
                   ),
-                  _buildLabel('Years of Experience'),
-                  _buildTextField(
-                    'Enter years',
+
+                  _buildLabel('Années d\'expérience'),
+                  _buildField(
                     _experienceYearsCtrl,
+                    'Entrez le nombre d\'années',
                     keyboard: TextInputType.number,
                     validator: (v) {
                       final y = int.tryParse(v!.trim());
                       if (y == null || y < 0 || y > 50) {
-                        return '0–50 only';
+                        return '0-50 années seulement';
                       }
                       return null;
                     },
                   ),
-                  _buildLabel('Bio'),
-                  TextFormField(
-                    controller: _bioCtrl,
-                    style: const TextStyle(color: Colors.white),
+
+                  _buildLabel('Bio / Description'),
+                  _buildField(
+                    _bioCtrl,
+                    'Décrivez votre expérience et expertise...',
                     maxLines: 3,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                      hintText: 'Write a short bio...',
-                    ),
-                    validator:
-                        (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
-                  const SizedBox(height: 30),
-                  SizedBox(
+                  const SizedBox(height: 32),
+
+                  // Save Button
+                  Container(
                     width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue[400]!, Colors.blue[600]!],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue[400]!.withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : _saveProfile,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -323,14 +496,22 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                       ),
                       child:
                           _isSaving
-                              ? const CircularProgressIndicator(
-                                color: Colors.white,
+                              ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
                               )
                               : const Text(
-                                'Save & Continue',
+                                'Enregistrer',
                                 style: TextStyle(
-                                  color: Colors.white,
                                   fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
                     ),

@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'chat_page.dart';
+import '../widgets/beautiful_logout_button.dart';
 
 class ScoutProfilePage extends StatefulWidget {
   final String scoutUserId;
-  const ScoutProfilePage({super.key, required this.scoutUserId});
+  final bool isViewingOtherUser;
+
+  const ScoutProfilePage({
+    super.key,
+    required this.scoutUserId,
+    this.isViewingOtherUser = false,
+  });
 
   @override
   State<ScoutProfilePage> createState() => _ScoutProfilePageState();
@@ -104,7 +111,9 @@ class _ScoutProfilePageState extends State<ScoutProfilePage>
                         ),
                         const Spacer(),
                         Text(
-                          scout['full_name'] ?? 'Scout Profile',
+                          widget.isViewingOtherUser
+                              ? (scout['full_name'] ?? 'Scout Profile')
+                              : 'My Profile',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -112,23 +121,35 @@ class _ScoutProfilePageState extends State<ScoutProfilePage>
                           ),
                         ),
                         const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.message, color: Colors.white),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => ChatScreen(
-                                      otherUserId: widget.scoutUserId,
-                                      otherUserName:
-                                          scout['full_name'] ?? 'Scout',
-                                      otherUserImage: '',
-                                    ),
-                              ),
-                            );
-                          },
-                        ),
+                        if (widget.isViewingOtherUser)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.message,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ChatScreen(
+                                        otherUserId: widget.scoutUserId,
+                                        otherUserName:
+                                            scout['full_name'] ?? 'Scout',
+                                        otherUserImage: '',
+                                      ),
+                                ),
+                              );
+                            },
+                          )
+                        else
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.white),
+                            onPressed: () {
+                              // Navigate to edit profile
+                              // TODO: Implement edit profile functionality
+                            },
+                          ),
                       ],
                     ),
                   ),
@@ -209,36 +230,71 @@ class _ScoutProfilePageState extends State<ScoutProfilePage>
                         ),
                         const SizedBox(height: 20),
                         // Action Buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildActionButton(
-                              'Follow',
-                              Icons.add,
-                              Colors.yellow,
-                              () {},
-                            ),
-                            _buildActionButton(
-                              'Message',
-                              Icons.message,
-                              Colors.grey[700]!,
-                              () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => ChatScreen(
-                                          otherUserId: widget.scoutUserId,
-                                          otherUserName:
-                                              scout['full_name'] ?? 'Scout',
-                                          otherUserImage: '',
-                                        ),
+                        if (widget.isViewingOtherUser)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildActionButton(
+                                'Follow',
+                                Icons.add,
+                                Colors.yellow,
+                                () {},
+                              ),
+                              _buildActionButton(
+                                'Message',
+                                Icons.message,
+                                Colors.blue,
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => ChatScreen(
+                                            otherUserId: widget.scoutUserId,
+                                            otherUserName:
+                                                scout['full_name'] ?? 'Scout',
+                                            otherUserImage: '',
+                                          ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          )
+                        else
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _buildActionButton(
+                                    'Edit Profile',
+                                    Icons.edit,
+                                    Colors.yellow,
+                                    () {
+                                      // TODO: Navigate to edit profile
+                                    },
                                   ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                                  _buildActionButton(
+                                    'Settings',
+                                    Icons.settings,
+                                    Colors.grey[700]!,
+                                    () {
+                                      // TODO: Navigate to settings
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Beautiful Logout Button
+                              const BeautifulLogoutButton(
+                                customText: 'Logout',
+                                customIcon: Icons.logout_rounded,
+                                showConfirmDialog: true,
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
