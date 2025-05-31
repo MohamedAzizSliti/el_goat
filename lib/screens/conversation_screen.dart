@@ -34,8 +34,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   Widget build(BuildContext context) {
     final filteredConversations =
         _conversations.where((convo) {
-          final name =
-              (convo['other_user_name'] ?? convo['name'] ?? '').toLowerCase();
+          final name = convo['name']?.toLowerCase() ?? '';
           return name.contains(_searchQuery.toLowerCase());
         }).toList();
 
@@ -86,11 +85,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                     : AssetImage(convo['avatar'])
                                         as ImageProvider,
                           ),
-                          title: Text(
-                            convo['other_user_name'] ??
-                                convo['name'] ??
-                                'Utilisateur',
-                          ),
+                          title: Text(convo['name'] ?? 'Utilisateur'),
                           subtitle: Text(convo['lastMessage'] ?? ''),
                           trailing: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,

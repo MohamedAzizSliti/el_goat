@@ -358,10 +358,13 @@ class MessageService {
     if (userId == null) return [];
 
     try {
-      // Get messages without foreign key relationships
       final response = await _client
           .from('messages')
-          .select('*')
+          .select('''
+            *,
+            sender:sender_id(id, full_name),
+            receiver:receiver_id(id, full_name)
+          ''')
           .or('sender_id.eq.$userId,receiver_id.eq.$userId')
           .order('created_at', ascending: false);
 
@@ -375,26 +378,14 @@ class MessageService {
                 : message['sender_id'];
 
         if (!conversations.containsKey(otherUserId)) {
-          // Add the message with basic user info
-          final conversationData = Map<String, dynamic>.from(message);
-          conversationData['other_user_id'] = otherUserId;
-          conversations[otherUserId] = conversationData;
+          conversations[otherUserId] = message;
         }
       }
 
       final conversationsList = conversations.values.toList();
 
-      // Fetch user names for each conversation
-      for (final conversation in conversationsList) {
-        final otherUserId = conversation['other_user_id'];
-        final userName = await _getUserName(otherUserId);
-        conversation['other_user_name'] = userName ?? 'Unknown User';
-      }
-
       // Update the conversations stream
-      if (!_conversationsController.isClosed) {
-        _conversationsController.add(conversationsList);
-      }
+      _conversationsController.add(conversationsList);
 
       return conversationsList;
     } catch (e) {
@@ -403,62 +394,10 @@ class MessageService {
     }
   }
 
-  /// Get user name from profile tables (public method)
-  Future<String?> getUserName(String userId) async {
-    return await _getUserName(userId);
-  }
-
-  /// Get user name from profile tables (private method)
-  Future<String?> _getUserName(String userId) async {
-    try {
-      // Try footballer_profiles first
-      var result =
-          await _client
-              .from('footballer_profiles')
-              .select('full_name')
-              .eq('user_id', userId)
-              .maybeSingle();
-
-      if (result != null) {
-        return result['full_name'] as String?;
-      }
-
-      // Try scout_profiles
-      result =
-          await _client
-              .from('scout_profiles')
-              .select('full_name')
-              .eq('user_id', userId)
-              .maybeSingle();
-
-      if (result != null) {
-        return result['full_name'] as String?;
-      }
-
-      // Try club_profiles
-      result =
-          await _client
-              .from('club_profiles')
-              .select('club_name')
-              .eq('user_id', userId)
-              .maybeSingle();
-
-      if (result != null) {
-        return result['club_name'] as String?;
-      }
-
-      // If not found in any profile table, return null
-      return null;
-    } catch (e) {
-      print('Error getting user name for $userId: $e');
-      return null;
-    }
-  }
-
   /// Get real-time conversations stream
   Stream<List<Map<String, dynamic>>> getConversationsStream() {
-    // Trigger initial load asynchronously
-    Future.microtask(() => getConversations());
+    // Initial load
+    getConversations();
 
     // Return the stream
     return _conversationsController.stream;

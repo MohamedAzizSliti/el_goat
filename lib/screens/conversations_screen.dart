@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../services/message_service.dart';
-import 'modern_chat_page.dart';
+import 'chat_page.dart';
 
 class ConversationsScreen extends StatefulWidget {
   const ConversationsScreen({super.key});
@@ -25,7 +25,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     super.initState();
     _messageService.initialize();
     _setupRealTimeConversations();
-    _loadConversations(); // Add initial load
     _loadUnreadCount();
   }
 
@@ -33,15 +32,12 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     // Use the real-time conversations stream from MessageService
     _conversationsStream = _messageService.getConversationsStream();
 
-    // Listen to the stream and update UI (but don't rely on it for initial load)
+    // Listen to the stream and update UI
     _conversationsStream.listen((conversations) {
       if (mounted) {
         setState(() {
           _conversations = conversations;
-          // Only set loading to false if we actually got data
-          if (conversations.isNotEmpty || !_isLoading) {
-            _isLoading = false;
-          }
+          _isLoading = false;
         });
         _loadUnreadCount();
       }
@@ -88,7 +84,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       context,
       MaterialPageRoute(
         builder:
-            (context) => ModernChatScreen(
+            (context) => ChatScreen(
               otherUserId: otherUserId,
               otherUserName: otherUserName,
               otherUserImage: otherUserImage,
@@ -148,7 +144,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           ],
         ),
         title: Text(
-          conversation['other_user_name'] ?? 'User $otherUserId',
+          'User $otherUserId',
           style: TextStyle(
             color: Colors.white,
             fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
@@ -195,7 +191,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
         onTap:
             () => _openChat(
               otherUserId,
-              conversation['other_user_name'] ?? 'User $otherUserId',
+              'User $otherUserId',
               'assets/images/player1.jpeg',
             ),
       ),
