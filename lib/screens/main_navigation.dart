@@ -1,5 +1,7 @@
 // lib/screens/main_navigation.dart
 
+import 'package:el_goat/screens/home_page.dart';
+import 'package:el_goat/screens/root_page.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
@@ -101,7 +103,7 @@ class _MainNavigationState extends State<MainNavigation> {
     if (isFootballer) {
       // For footballers: Home, News, Games, Messages, Profile
       return [
-        const AcceuilPage(), // Index 0: Home
+        const RootPage(), // Index 0: Home
         NewsHomePage(toggleTheme: () {}), // Index 1: News
         const GamificationDashboard(), // Index 2: Games
         const ConversationsScreen(), // Index 3: Messages
@@ -110,7 +112,7 @@ class _MainNavigationState extends State<MainNavigation> {
     } else {
       // For non-footballers: Home, News, Messages, Profile
       return [
-        const AcceuilPage(), // Index 0: Home
+        const RootPage(), // Index 0: Home
         NewsHomePage(toggleTheme: () {}), // Index 1: News
         const ConversationsScreen(), // Index 2: Messages
         const ProfileRouterWidget(), // Index 3: Profile
@@ -120,6 +122,12 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      // Not connected: show login or landing page
+      return const HomePage(); // Or LoginPage(), or any public/landing page
+    }
+    // Connected: show main navigation with bottom bar
     return Scaffold(
       body: PageView(
         controller: _pageController,

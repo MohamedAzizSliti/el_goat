@@ -11,6 +11,7 @@ import 'screens/news_reels_page.dart';
 import 'screens/registration_page.dart';
 import 'screens/login.dart';
 import 'screens/accueil_page.dart';
+import 'screens/root_page.dart';
 import 'screens/club_profil_page.dart';
 import 'screens/chat_page.dart';
 import 'screens/games_page.dart';
