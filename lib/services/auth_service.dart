@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:el_goat/services/supabase_auth_service.dart';
 import '../models/user_model.dart';
 import '../models/footballer_profile_model.dart';
 import '../models/scout_profile_model.dart';
@@ -17,6 +18,89 @@ class AuthService {
     : _footballerRepo = FootballerRepository(_client),
       _scoutRepo = ScoutRepository(_client),
       _clubRepo = ClubRepository(_client);
+
+  /// OTP-based sign up using Supabase Admin API
+  /// Returns null if OTP is generated and needs to be verified, otherwise returns UserModel
+  Future<UserModel?> signUpWithOtp({
+    required String email,
+    String? otp,
+    required String fullName,
+    required String role,
+    required String supabaseUrl,
+    required String serviceRoleKey,
+  }) async {
+    try {
+      final supabaseAuthService = SupabaseAuthService();
+      final user = await supabaseAuthService.registerWithOtp(
+        email: email,
+        otp: otp,
+        supabaseUrl: supabaseUrl,
+        serviceRoleKey: serviceRoleKey,
+      );
+      print("user " + user.toString());
+      if (user == null) {
+        // OTP sent, waiting for user input
+        return null;
+      }
+      // Create UserModel and role-specific profile
+      final userModel = UserModel(
+        id: user.id,
+        email: email,
+        fullName: fullName,
+        role: role,
+        createdAt: DateTime.now(),
+      );
+      switch (role.toLowerCase()) {
+        case 'footballer':
+          await _footballerRepo.createProfile(
+            FootballerProfileModel(
+              userId: userModel.id,
+              fullName: fullName,
+              dateOfBirth: DateTime.now(),
+              nationality: '',
+              position: '',
+              preferredFoot: '',
+              height: 0,
+              weight: 0,
+              skills: [],
+              experience: '',
+              club: '',
+              createdAt: DateTime.now(),
+            ),
+          );
+          break;
+        case 'scout':
+          await _scoutRepo.createProfile(
+            ScoutProfileModel(
+              userId: userModel.id,
+              fullName: fullName,
+              organization: '',
+              specialization: '',
+              regions: [],
+              createdAt: DateTime.now(),
+            ),
+          );
+          break;
+        case 'club':
+          await _clubRepo.createProfile(
+            ClubProfileModel(
+              userId: userModel.id,
+              fullName: fullName,
+              clubType: '',
+              country: '',
+              city: '',
+              createdAt: DateTime.now(),
+            ),
+          );
+          break;
+      }
+      return userModel;
+    } catch (e) {
+      // Propagate error to UI for handling
+      print("errorFFFF" + e.toString());
+      rethrow;
+    }
+  }
 
   Future<UserModel?> signUp({
     required String email,
@@ -55,7 +139,7 @@ class AuthService {
               preferredFoot: '',
               height: 0,
               weight: 0,
-                skills: [],
+              skills: [],
               experience: '',
               club: '',
               createdAt: DateTime.now(),

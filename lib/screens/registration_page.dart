@@ -1,6 +1,7 @@
 // lib/screens/registration_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
@@ -42,6 +43,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
     super.dispose();
   }
 
+  String? _otp;
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate() || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,15 +56,55 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() => _isLoading = true);
 
     try {
-      final user = await _authService.signUp(
+      // Set your Supabase project URL and service_role key here
+
+      final String supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
+      final String serviceRoleKey =
+          dotenv.env['SUPABASE_SERVICE_ROLE_SECRET'] ?? '';
+      final user = await _authService.signUpWithOtp(
         email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        otp: _otp,
         fullName: _nameController.text.trim(),
         role: _selectedCategory!,
+        supabaseUrl: supabaseUrl,
+        serviceRoleKey: serviceRoleKey,
       );
+      print("user " + user.toString());
 
       if (user == null) {
-        throw Exception('Failed to create user');
+        // OTP generated and sent, prompt user to enter OTP
+        setState(() => _isLoading = false);
+        await showDialog(
+          context: context,
+          builder: (context) {
+            final otpController = TextEditingController();
+            return AlertDialog(
+              title: const Text('Enter OTP'),
+              content: TextField(
+                controller: otpController,
+                decoration: const InputDecoration(labelText: 'OTP Code'),
+                keyboardType: TextInputType.number,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _otp = otpController.text.trim();
+                    });
+                    await _submitForm();
+                  },
+                  child: const Text('Verify'),
+                ),
+              ],
+            );
+          },
+        );
+        return;
       }
 
       if (!mounted) return;
@@ -92,7 +135,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       );
     } catch (e) {
       if (!mounted) return;
-
+      print("error " + e.toString());
       String message = 'Registration failed: ';
       if (e.toString().contains('already registered')) {
         message += 'This email is already registered. Please login instead.';
@@ -107,6 +150,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           ),
         );
       } else {
+        print(e.toString());
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message + e.toString())));
