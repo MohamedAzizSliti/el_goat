@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../screens/success_page.dart';
+
 import '../theme/app_theme.dart';
 import '../widgets/country_selector.dart';
-import 'dart:async';
+
 
 class FootballerSignUpPage extends StatefulWidget {
   final String userId;
@@ -36,24 +36,11 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
 
   final supabase = Supabase.instance.client;
 
-  // OTP verification state
-  bool _showOTPVerification = false;
-  bool _isVerifyingOTP = false;
-  bool _isResendingOTP = false;
-  int _resendCountdown = 60;
-  Timer? _timer;
-  String _errorMessage = '';
-  String _userEmail = '';
-  final List<TextEditingController> _otpControllers = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
+
 
   @override
   void initState() {
     super.initState();
-    _getUserEmail();
   }
 
   @override
@@ -64,21 +51,13 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
     _heightCtrl.dispose();
     _weightCtrl.dispose();
     _clubCtrl.dispose();
-    for (var controller in _otpControllers) {
-      controller.dispose();
-    }
-    for (var node in _otpFocusNodes) {
-      node.dispose();
-    }
-    _timer?.cancel();
+
     super.dispose();
   }
 
-  void _getUserEmail() {
+  String get _userEmail {
     final user = supabase.auth.currentUser;
-    if (user != null && user.email != null) {
-      _userEmail = user.email!;
-    }
+    return user?.email ?? '';
   }
 
   Future<void> _selectDate() async {
@@ -124,102 +103,28 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
     setState(() => _isSaving = true);
 
     try {
-      // Send OTP to user's email
-      await supabase.auth.signInWithOtp(email: _userEmail);
-
+      await _saveFootballerProfile();
       if (mounted) {
-        setState(() {
-          _showOTPVerification = true;
-          _isSaving = false;
-        });
-        _startResendTimer();
-
+        setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Verification code sent to $_userEmail'),
+          const SnackBar(
+            content: Text('Profile saved successfully.'),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (error) {
       if (mounted) {
-        String errorMessage = 'Error sending verification code';
-
-        // Handle specific error types
-        if (error.toString().contains('email_rate_limit_exceeded')) {
-          errorMessage =
-              'Too many emails sent. Please wait a few minutes before trying again.';
-        } else if (error.toString().contains('over_email_send_rate_limit')) {
-          errorMessage =
-              'Email rate limit exceeded. Please wait 60 seconds before trying again.';
-        } else if (error.toString().contains('rate limit')) {
-          errorMessage =
-              'Rate limit exceeded. Please wait a moment and try again.';
-        }
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Text('Error saving profile: \\${error.toString()}'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
           ),
         );
-        setState(() => _isSaving = false);
       }
     }
   }
 
-  void _startResendTimer() {
-    _resendCountdown = 60;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_resendCountdown > 0) {
-        setState(() => _resendCountdown--);
-      } else {
-        timer.cancel();
-      }
-    });
-  }
-
-  String get _otpCode => _otpControllers.map((c) => c.text).join();
-
-  Future<void> _verifyOTP() async {
-    if (_otpCode.length != 6) {
-      setState(() => _errorMessage = 'Please enter the complete 6-digit code');
-      return;
-    }
-
-    setState(() {
-      _isVerifyingOTP = true;
-      _errorMessage = '';
-    });
-
-    try {
-      final response = await supabase.auth.verifyOTP(
-        email: _userEmail,
-        token: _otpCode,
-        type: OtpType.email,
-      );
-
-      if (response.user != null) {
-        // OTP verified, now save the profile
-        await _saveFootballerProfile();
-      } else {
-        setState(
-          () => _errorMessage = 'Invalid verification code. Please try again.',
-        );
-        _clearOTP();
-      }
-    } catch (e) {
-      setState(
-        () => _errorMessage = 'Verification failed. Please check your code.',
-      );
-      _clearOTP();
-    } finally {
-      if (mounted) {
-        setState(() => _isVerifyingOTP = false);
-      }
-    }
-  }
 
   Future<void> _saveFootballerProfile() async {
     try {
@@ -268,72 +173,6 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
     }
   }
 
-  Future<void> _resendOTP() async {
-    setState(() => _isResendingOTP = true);
-
-    try {
-      await supabase.auth.signInWithOtp(email: _userEmail);
-      _startResendTimer();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Verification code resent to $_userEmail'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      String errorMessage = 'Failed to resend code. Please try again.';
-
-      // Handle specific error types
-      if (e.toString().contains('email_rate_limit_exceeded')) {
-        errorMessage =
-            'Too many emails sent. Please wait a few minutes before trying again.';
-      } else if (e.toString().contains('over_email_send_rate_limit')) {
-        errorMessage =
-            'Email rate limit exceeded. Please wait 60 seconds before trying again.';
-      } else if (e.toString().contains('rate limit')) {
-        errorMessage =
-            'Rate limit exceeded. Please wait a moment and try again.';
-      }
-
-      setState(() => _errorMessage = errorMessage);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isResendingOTP = false);
-      }
-    }
-  }
-
-  void _clearOTP() {
-    for (var controller in _otpControllers) {
-      controller.clear();
-    }
-    _otpFocusNodes[0].requestFocus();
-  }
-
-  void _onOTPChanged(String value, int index) {
-    if (value.isNotEmpty && index < 5) {
-      _otpFocusNodes[index + 1].requestFocus();
-    }
-
-    if (_otpCode.length == 6) {
-      _verifyOTP();
-    }
-
-    setState(() => _errorMessage = '');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -359,10 +198,7 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child:
-                _showOTPVerification
-                    ? _buildOTPVerification()
-                    : _buildFootballerForm(),
+            child: _buildFootballerForm(),
           ),
         ),
       ),
@@ -658,214 +494,5 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
     );
   }
 
-  Widget _buildOTPVerification() {
-    return Column(
-      children: [
-        const SizedBox(height: 40),
 
-        // Header
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              colors: [Colors.orange[400]!, Colors.red[400]!],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.orange[400]!.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.email, size: 40, color: Colors.white),
-        ),
-
-        const SizedBox(height: 24),
-        const Text(
-          'Email Verification',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        const SizedBox(height: 12),
-        Text(
-          'We sent a 6-digit code to\n$_userEmail',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 16,
-          ),
-          textAlign: TextAlign.center,
-        ),
-
-        const SizedBox(height: 40),
-
-        // OTP Input
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(6, (index) {
-            return Container(
-              width: 50,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color:
-                      _otpControllers[index].text.isNotEmpty
-                          ? Colors.orange[400]!
-                          : Colors.white.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-              ),
-              child: TextFormField(
-                controller: _otpControllers[index],
-                focusNode: _otpFocusNodes[index],
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-                keyboardType: TextInputType.number,
-                maxLength: 1,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  counterText: '',
-                ),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: (value) => _onOTPChanged(value, index),
-              ),
-            );
-          }),
-        ),
-
-        if (_errorMessage.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _errorMessage,
-                    style: const TextStyle(color: Colors.red, fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-
-        const SizedBox(height: 32),
-
-        // Verify Button
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.orange[400]!, Colors.orange[600]!],
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.orange[400]!.withValues(alpha: 0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: ElevatedButton(
-            onPressed: _isVerifyingOTP ? null : _verifyOTP,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child:
-                _isVerifyingOTP
-                    ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                    : const Text(
-                      'Verify Code',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // Resend Section
-        Column(
-          children: [
-            Text(
-              'Didn\'t receive the code?',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (_resendCountdown > 0)
-              Text(
-                'Resend in ${_resendCountdown}s',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 14,
-                ),
-              )
-            else
-              TextButton(
-                onPressed: _isResendingOTP ? null : _resendOTP,
-                child:
-                    _isResendingOTP
-                        ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.orange,
-                            ),
-                          ),
-                        )
-                        : Text(
-                          'Resend Code',
-                          style: TextStyle(
-                            color: Colors.orange[400],
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
 }
