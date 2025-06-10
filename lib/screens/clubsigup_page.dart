@@ -8,13 +8,17 @@ import '../widgets/country_selector.dart';
 
 class ClubSignUpPage extends StatefulWidget {
   final String userId;
-  const ClubSignUpPage({Key? key, required this.userId}) : super(key: key);
+  final String name;
+  final String email;
+  const ClubSignUpPage({Key? key, required this.userId, required this.name, required this.email}) : super(key: key);
 
   @override
   State<ClubSignUpPage> createState() => _ClubSignUpPageState();
 }
 
 class _ClubSignUpPageState extends State<ClubSignUpPage> {
+  late final String name;
+  late final String email;
   final _formKey = GlobalKey<FormState>();
   final _clubNameCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
@@ -27,6 +31,9 @@ class _ClubSignUpPageState extends State<ClubSignUpPage> {
   @override
   void initState() {
     super.initState();
+    name = widget.name;
+    email = widget.email;
+    // Optionally, use name/email to pre-fill fields
   }
 
   @override
@@ -113,7 +120,7 @@ class _ClubSignUpPageState extends State<ClubSignUpPage> {
       });
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/accueil');
+        Navigator.pushReplacementNamed(context, '/');
       }
     } catch (error) {
       if (mounted) {

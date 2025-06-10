@@ -7,16 +7,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/country_selector.dart';
 
-
 class FootballerSignUpPage extends StatefulWidget {
   final String userId;
-  const FootballerSignUpPage({super.key, required this.userId});
+  final String name;
+  final String email;
+  const FootballerSignUpPage({
+    super.key,
+    required this.userId,
+    required this.name,
+    required this.email,
+  });
 
   @override
   State<FootballerSignUpPage> createState() => _FootballerSignUpPageState();
 }
 
 class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
+  late final String name;
+  late final String email;
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
 
@@ -36,11 +44,15 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
 
   final supabase = Supabase.instance.client;
 
-
-
   @override
   void initState() {
     super.initState();
+    name = widget.name;
+    email = widget.email;
+    if (_fullNameCtrl.text.isEmpty) {
+      _fullNameCtrl.text = name;
+    }
+    // Optionally, you can use email elsewhere as needed
   }
 
   @override
@@ -125,7 +137,6 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
     }
   }
 
-
   Future<void> _saveFootballerProfile() async {
     try {
       // Parse date
@@ -159,7 +170,7 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
           .eq('id', widget.userId);
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/accueil');
+        Navigator.pushReplacementNamed(context, '/');
       }
     } catch (error) {
       if (mounted) {
@@ -172,7 +183,6 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -493,6 +503,4 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
       ),
     );
   }
-
-
 }

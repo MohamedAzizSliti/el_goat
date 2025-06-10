@@ -113,13 +113,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
       late Widget nextPage;
       switch (_selectedCategory!.toLowerCase()) {
         case 'footballer':
-          nextPage = FootballerSignUpPage(userId: user.id);
+          nextPage = FootballerSignUpPage(userId: user.id, name: _nameController.text.trim(), email: _emailController.text.trim());
           break;
         case 'scout':
-          nextPage = ScoutSignUpPage(userId: user.id);
+          nextPage = ScoutSignUpPage(userId: user.id, name: _nameController.text.trim(), email: _emailController.text.trim());
           break;
         case 'club':
-          nextPage = ClubSignUpPage(userId: user.id);
+          nextPage = ClubSignUpPage(userId: user.id, name: _nameController.text.trim(), email: _emailController.text.trim());
           break;
         default:
           throw Exception('Invalid category');
@@ -432,12 +432,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       Icons.business,
                       'Team organization',
                       AppTheme.accentColor,
-                    ),
-                    _buildRoleCard(
-                      'Fan',
-                      Icons.favorite,
-                      'Football enthusiast',
-                      AppTheme.errorColor,
                     ),
                   ],
                 ),

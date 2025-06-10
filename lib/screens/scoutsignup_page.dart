@@ -10,13 +10,22 @@ import 'dart:async';
 
 class ScoutSignUpPage extends StatefulWidget {
   final String userId;
-  const ScoutSignUpPage({Key? key, required this.userId}) : super(key: key);
+  final String name;
+  final String email;
+  const ScoutSignUpPage({
+    Key? key,
+    required this.userId,
+    required this.name,
+    required this.email,
+  }) : super(key: key);
 
   @override
   State<ScoutSignUpPage> createState() => _ScoutSignUpPageState();
 }
 
 class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
+  late final String name;
+  late final String email;
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
   final _supabase = Supabase.instance.client;
@@ -37,6 +46,10 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
   @override
   void initState() {
     super.initState();
+    name = widget.name;
+    email = widget.email;
+    _userFullName = name;
+    _userEmail = email;
     _loadUserData();
   }
 
@@ -55,7 +68,7 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
       if (user != null) {
         setState(() {
           _userEmail = user.email;
-          _userFullName = user.userMetadata?['full_name'] ?? '';
+          _userFullName = widget.name;
         });
       }
     } catch (e) {
@@ -119,7 +132,7 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
       await _supabase.from('scout_profiles').insert(profile);
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/accueil');
+        Navigator.pushReplacementNamed(context, '/');
       }
     } catch (error) {
       if (mounted) {
@@ -134,12 +147,12 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
   }
 
   Widget _buildLabel(String text) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 4),
-        child: Text(
-          text,
-          style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 12, bottom: 4),
+    child: Text(
+      text,
+      style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500),
+    ),
+  );
 
   Widget _buildTextField(
     String hint,
@@ -147,43 +160,43 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
     TextInputType keyboard = TextInputType.text,
     String? Function(String?)? validator,
   }) => TextFormField(
-        controller: controller,
-        style: const TextStyle(color: Colors.white),
-        keyboardType: keyboard,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
+    controller: controller,
+    style: const TextStyle(color: Colors.white),
+    keyboardType: keyboard,
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.grey[800],
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.grey),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
+  );
 
   Widget _buildDropdown(
     List<String> items,
     String? value,
     void Function(String?) onChanged,
   ) => DropdownButtonFormField<String>(
-        value: value,
-        dropdownColor: Colors.grey[900],
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        items:
-            items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
-        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
+    value: value,
+    dropdownColor: Colors.grey[900],
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.grey[800],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    items:
+        items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+    onChanged: onChanged,
+    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -354,9 +367,9 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                   _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                          'Save & Continue',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
+                        'Save & Continue',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
             ),
           ),
         ],

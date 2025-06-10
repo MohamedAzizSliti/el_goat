@@ -1,13 +1,13 @@
+// lib/features/search/presentation/pages/search_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/footballer_profile.dart';
 import '../models/scout_profile.dart';
 import '../models/club_profile.dart';
-import '../services/profile_service.dart';
 import '../widgets/country_selector.dart';
-import '../screens/profile_view_page.dart';
 import '../services/user_profile_navigator.dart';
-import '../utils/countries.dart';
 
 enum UserType { footballer, scout, club }
 
@@ -22,26 +22,50 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
 
-  // Search results
+  // Nested PageControllers: one per tab
+  late Map<int, PageController> _innerControllers;
+
+  // Results
   List<FootballerProfile> _footballers = [];
   List<ScoutProfile> _scouts = [];
   List<ClubProfile> _clubs = [];
 
-  // Loading states
+  // Loading & state
   bool _isLoading = false;
   bool _hasSearched = false;
 
-  // Current filters
-  Map<String, dynamic> _footballerFilters = {};
-  Map<String, dynamic> _scoutFilters = {};
-  Map<String, dynamic> _clubFilters = {};
+  // Filters per tab
+  final Map<String, dynamic> _footballerFilters = {};
+  final Map<String, dynamic> _scoutFilters = {};
+  final Map<String, dynamic> _clubFilters = {};
 
-  int _selectedIndex = 1; // Search tab index
+  // Persistent controllers for filter text fields
+  late final TextEditingController _scoutCityController;
+  late final TextEditingController _clubLocationController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _innerControllers = {
+      0: PageController(),
+      1: PageController(),
+      2: PageController(),
+    };
+    // Initialize controllers with current filter values
+    _scoutCityController = TextEditingController(
+      text: _scoutFilters['city'] ?? '',
+    );
+    _clubLocationController = TextEditingController(
+      text: _clubFilters['location'] ?? '',
+    );
+    // Add listeners to update filters
+    _scoutCityController.addListener(() {
+      _scoutFilters['city'] = _scoutCityController.text;
+    });
+    _clubLocationController.addListener(() {
+      _clubFilters['location'] = _clubLocationController.text;
+    });
     _loadInitialData();
   }
 
@@ -49,23 +73,32 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _scoutCityController.dispose();
+    _clubLocationController.dispose();
+    _innerControllers.values.forEach((c) => c.dispose());
     super.dispose();
   }
 
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     try {
-      // Load some initial data for each type
-      final footballers = await ProfileService.searchFootballers();
-      final scouts = await ProfileService.searchScouts();
-      final clubs = await _searchClubs();
-
-      setState(() {
-        _footballers = footballers.take(10).toList();
-        _scouts = scouts.take(10).toList();
-        _clubs = clubs.take(10).toList();
-        _hasSearched = true;
-      });
+      // fill initial lists (first 10)
+      _footballers =
+          (await Supabase.instance.client
+              .from('footballer_profiles')
+              .select()
+              .limit(10))!.map((j) => FootballerProfile.fromJson(j)).toList();
+      _scouts =
+          (await Supabase.instance.client
+              .from('scout_profiles')
+              .select()
+              .limit(10))!.map((j) => ScoutProfile.fromJson(j)).toList();
+      _clubs =
+          (await Supabase.instance.client
+              .from('club_profiles')
+              .select()
+              .limit(10))!.map((j) => ClubProfile.fromJson(j)).toList();
+      _hasSearched = true;
     } catch (e) {
       debugPrint('Error loading initial data: $e');
     } finally {
@@ -73,77 +106,102 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     }
   }
 
-  Future<List<ClubProfile>> _searchClubs({
-    String? league,
-    String? location,
-    String? division,
-  }) async {
-    try {
-      var query = Supabase.instance.client.from('club_profiles').select();
-
-      // Note: league and division fields don't exist in current schema
-      // if (league != null && league.isNotEmpty) {
-      //   query = query.eq('league', league);
-      // }
-      if (location != null && location.isNotEmpty) {
-        query = query.ilike('location', '%$location%');
-      }
-      // if (division != null && division.isNotEmpty) {
-      //   query = query.eq('division', division);
-      // }
-
-      final response = await query.limit(50);
-      return (response as List)
-          .map((json) => ClubProfile.fromJson(json))
-          .toList();
-    } catch (e) {
-      debugPrint('Error searching clubs: $e');
-      return [];
-    }
-  }
-
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-    switch (index) {
-      case 0:
-        Navigator.pushNamed(context, '/');
-        break;
-      case 1:
-        // Stay on search page
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/news_home');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/footballer_profile');
-        break;
-    }
-  }
-
   Future<void> _performSearch() async {
-    if (_searchController.text.trim().isEmpty) return;
-
+    final q = _searchController.text.trim();
     setState(() => _isLoading = true);
 
     try {
-      final query = _searchController.text.trim();
-
-      // Search all types based on current tab
       switch (_tabController.index) {
         case 0: // Footballers
-          final results = await _searchFootballersWithQuery(query);
-          setState(() => _footballers = results);
+          var qb0 = Supabase.instance.client
+              .from('footballer_profiles')
+              .select()
+              .or(
+                'full_name.ilike.%$q%,position.ilike.%$q%,current_club.ilike.%$q%',
+              );
+          if (_footballerFilters['position'] != null &&
+              (_footballerFilters['position'] as String).isNotEmpty) {
+            qb0 = qb0.eq('position', _footballerFilters['position']);
+          }
+          if (_footballerFilters['experience_level'] != null &&
+              (_footballerFilters['experience_level'] as String).isNotEmpty) {
+            qb0 = qb0.eq(
+              'experience_level',
+              _footballerFilters['experience_level'],
+            );
+          }
+          // Remove age filter from SQL, filter in Dart below
+          if (_footballerFilters['country'] != null &&
+              (_footballerFilters['country'] as String).isNotEmpty) {
+            qb0 = qb0.eq('country', _footballerFilters['country']);
+          }
+          final res0 = await qb0.limit(
+            100,
+          ); // fetch more for client-side filtering
+          var allFootballers =
+              (res0 as List).map((j) => FootballerProfile.fromJson(j)).toList();
+          // Age filtering in Dart
+          int? minAge = _footballerFilters['min_age'];
+          int? maxAge = _footballerFilters['max_age'];
+          if (minAge != null || maxAge != null) {
+            allFootballers =
+                allFootballers.where((f) {
+                  final age = f.age;
+                  if (age == null) return false;
+                  if (minAge != null && age < minAge) return false;
+                  if (maxAge != null && age > maxAge) return false;
+                  return true;
+                }).toList();
+          }
+          _footballers = allFootballers;
+          debugPrint(
+            '[FILTER] Footballer filters: ${_footballerFilters.toString()}',
+          );
           break;
+
         case 1: // Scouts
-          final results = await _searchScoutsWithQuery(query);
-          setState(() => _scouts = results);
+          var qb1 = Supabase.instance.client
+              .from('scout_profiles')
+              .select()
+              .or(
+                'full_name.ilike.%$q%,country.ilike.%$q%,city.ilike.%$q%,scouting_level.ilike.%$q%',
+              );
+          if (_scoutFilters['scouting_level'] != null &&
+              (_scoutFilters['scouting_level'] as String).isNotEmpty) {
+            qb1 = qb1.eq('scouting_level', _scoutFilters['scouting_level']);
+          }
+          if (_scoutFilters['country'] != null &&
+              (_scoutFilters['country'] as String).isNotEmpty) {
+            qb1 = qb1.eq('country', _scoutFilters['country']);
+          }
+          final res1 = await qb1.limit(50);
+          _scouts =
+              (res1 as List).map((j) => ScoutProfile.fromJson(j)).toList();
+          debugPrint('[FILTER] Scout filters: ${_scoutFilters.toString()}');
           break;
+
         case 2: // Clubs
-          final results = await _searchClubsWithQuery(query);
-          setState(() => _clubs = results);
+          var qb2 = Supabase.instance.client
+              .from('club_profiles')
+              .select()
+              .or('club_name.ilike.%$q%,location.ilike.%$q%,league.ilike.%$q%');
+          if (_clubFilters['league'] != null &&
+              (_clubFilters['league'] as String).isNotEmpty) {
+            qb2 = qb2.eq('league', _clubFilters['league']);
+          }
+          if (_clubFilters['division'] != null &&
+              (_clubFilters['division'] as String).isNotEmpty) {
+            qb2 = qb2.eq('division', _clubFilters['division']);
+          }
+          if (_clubFilters['location'] != null &&
+              (_clubFilters['location'] as String).isNotEmpty) {
+            qb2 = qb2.ilike('location', '%${_clubFilters['location']}%');
+          }
+          final res2 = await qb2.limit(50);
+          _clubs = (res2 as List).map((j) => ClubProfile.fromJson(j)).toList();
+          debugPrint('[FILTER] Club filters: ${_clubFilters.toString()}');
           break;
       }
-
       setState(() => _hasSearched = true);
     } catch (e) {
       debugPrint('Error performing search: $e');
@@ -152,159 +210,26 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     }
   }
 
-  Future<List<FootballerProfile>> _searchFootballersWithQuery(
-    String query,
-  ) async {
-    try {
-      final response = await Supabase.instance.client
-          .from('footballer_profiles')
-          .select()
-          .or(
-            'full_name.ilike.%$query%,position.ilike.%$query%,current_club.ilike.%$query%',
-          )
-          .limit(50);
-
-      return (response as List)
-          .map((json) => FootballerProfile.fromJson(json))
-          .toList();
-    } catch (e) {
-      debugPrint('Error searching footballers: $e');
-      return [];
-    }
-  }
-
-  Future<List<ScoutProfile>> _searchScoutsWithQuery(String query) async {
-    try {
-      final response = await Supabase.instance.client
-          .from('scout_profiles')
-          .select()
-          .or(
-            'full_name.ilike.%$query%,country.ilike.%$query%,organization.ilike.%$query%',
-          )
-          .limit(50);
-
-      return (response as List)
-          .map((json) => ScoutProfile.fromJson(json))
-          .toList();
-    } catch (e) {
-      debugPrint('Error searching scouts: $e');
-      return [];
-    }
-  }
-
-  Future<List<ClubProfile>> _searchClubsWithQuery(String query) async {
-    try {
-      final response = await Supabase.instance.client
-          .from('club_profiles')
-          .select()
-          .or(
-            'club_name.ilike.%$query%,location.ilike.%$query%,league.ilike.%$query%',
-          )
-          .limit(50);
-
-      return (response as List)
-          .map((json) => ClubProfile.fromJson(json))
-          .toList();
-    } catch (e) {
-      debugPrint('Error searching clubs: $e');
-      return [];
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: ShaderMask(
-          shaderCallback:
-              (bounds) => LinearGradient(
-                colors: [Colors.yellow[400]!, Colors.orange[400]!],
-              ).createShader(bounds),
-          child: const Text(
-            'Search',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-        ),
-        centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.yellow[400],
-          labelColor: Colors.yellow[400],
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(icon: Icon(Icons.sports_soccer), text: 'Footballers'),
-            Tab(icon: Icon(Icons.search), text: 'Scouts'),
-            Tab(icon: Icon(Icons.business), text: 'Clubs'),
-          ],
-        ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0f0f23),
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f0f23),
-            ],
-            stops: [0.0, 0.3, 0.7, 1.0],
-          ),
-        ),
-        child: Column(
-          children: [
-            _buildSearchBar(),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildFootballersTab(),
-                  _buildScoutsTab(),
-                  _buildClubsTab(),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/countries'),
-        backgroundColor: Colors.yellow[400],
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.public),
-        label: const Text('Countries'),
-      ),
-    );
+  void _goToFilterPage() {
+    final idx = _tabController.index;
+    _innerControllers[idx]!.jumpToPage(1);
   }
 
   Widget _buildSearchBar() {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.1),
-            Colors.white.withValues(alpha: 0.05),
-          ],
-        ),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: TextField(
         controller: _searchController,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: 'Search ${_getSearchHint()}...',
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-          prefixIcon: Icon(Icons.search, color: Colors.yellow[400]),
+          hintText: 'Search ${_getSearchHint()}…',
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+          prefixIcon: const Icon(Icons.search, color: Colors.yellow),
           suffixIcon:
               _searchController.text.isNotEmpty
                   ? IconButton(
@@ -312,11 +237,12 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                     onPressed: () {
                       _searchController.clear();
                       setState(() {});
+                      _performSearch();
                     },
                   )
                   : IconButton(
-                    icon: Icon(Icons.tune, color: Colors.yellow[400]),
-                    onPressed: _showFilters,
+                    icon: const Icon(Icons.tune, color: Colors.yellow),
+                    onPressed: _goToFilterPage,
                   ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
@@ -324,8 +250,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             vertical: 16,
           ),
         ),
-        onSubmitted: (_) => _performSearch(),
-        onChanged: (value) => setState(() {}),
+        onChanged: (_) => _performSearch(),
       ),
     );
   }
@@ -343,11 +268,277 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     }
   }
 
-  void _showFilters() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildFilterSheet(),
+  ///—— Result & Filter pages for Footballers ——
+  Widget _buildFootballersTab() {
+    final pc = _innerControllers[0]!;
+    return PageView(
+      controller: pc,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        // —— Page 0: Search Results ——
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator(color: Colors.yellow))
+        else if (!_hasSearched)
+          _emptyState('Search for footballers', Icons.sports_soccer)
+        else if (_footballers.isEmpty)
+          _emptyState('No footballers found', Icons.search_off)
+        else
+          ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: _footballers.length,
+            itemBuilder: (ctx, i) => _buildFootballerCard(_footballers[i]),
+          ),
+
+        // —— Page 1: Filters ——
+        SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildFootballerFilters(),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _footballerFilters.clear();
+                        pc.jumpToPage(0);
+                        _performSearch();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: const Text(
+                        'Clear',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        pc.jumpToPage(0);
+                        _performSearch();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellow,
+                      ),
+                      child: const Text(
+                        'Apply',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  ///—— Result & Filter pages for Scouts ——
+  Widget _buildScoutsTab() {
+    final pc = _innerControllers[1]!;
+    return PageView(
+      controller: pc,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator(color: Colors.yellow))
+        else if (!_hasSearched)
+          _emptyState('Search for scouts', Icons.search)
+        else if (_scouts.isEmpty)
+          _emptyState('No scouts found', Icons.search_off)
+        else
+          ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: _scouts.length,
+            itemBuilder: (ctx, i) => _buildScoutCard(_scouts[i]),
+          ),
+
+        SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildScoutFilters(),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _scoutFilters.clear();
+                        pc.jumpToPage(0);
+                        _performSearch();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: const Text(
+                        'Clear',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        pc.jumpToPage(0);
+                        _performSearch();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellow,
+                      ),
+                      child: const Text(
+                        'Apply',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  ///—— Result & Filter pages for Clubs ——
+  Widget _buildClubsTab() {
+    final pc = _innerControllers[2]!;
+    return PageView(
+      controller: pc,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator(color: Colors.yellow))
+        else if (!_hasSearched)
+          _emptyState('Search for clubs', Icons.business)
+        else if (_clubs.isEmpty)
+          _emptyState('No clubs found', Icons.search_off)
+        else
+          ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: _clubs.length,
+            itemBuilder: (ctx, i) => _buildClubCard(_clubs[i]),
+          ),
+
+        SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildClubFilters(),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _clubFilters.clear();
+                        pc.jumpToPage(0);
+                        _performSearch();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: const Text(
+                        'Clear',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        pc.jumpToPage(0);
+                        _performSearch();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellow,
+                      ),
+                      child: const Text(
+                        'Apply',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _emptyState(String message, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 60, color: Colors.white.withOpacity(0.3)),
+          const SizedBox(height: 12),
+          Text(message, style: TextStyle(color: Colors.white.withOpacity(0.7))),
+        ],
+      ),
+    );
+  }
+
+  // … (all your existing _buildFootballerCard, _buildScoutCard, _buildClubCard,
+  //      plus _buildFootballerFilters, _buildScoutFilters, _buildClubFilters here) …
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Search',
+          style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.yellow,
+          labelColor: Colors.yellow,
+          unselectedLabelColor: Colors.white70,
+          tabs: const [
+            Tab(icon: Icon(Icons.sports_soccer), text: 'Footballers'),
+            Tab(icon: Icon(Icons.search), text: 'Scouts'),
+            Tab(icon: Icon(Icons.business), text: 'Clubs'),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          _buildSearchBar(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildFootballersTab(),
+                _buildScoutsTab(),
+                _buildClubsTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, '/countries'),
+        backgroundColor: Colors.yellow,
+        foregroundColor: Colors.black,
+        icon: const Icon(Icons.public),
+        label: const Text('Countries'),
+      ),
     );
   }
 
@@ -387,6 +578,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 child: OutlinedButton(
                   onPressed: () {
                     _clearFilters();
+                    _performSearch(); // re‐run without any filters
+
                     Navigator.pop(context);
                   },
                   style: OutlinedButton.styleFrom(
@@ -465,11 +658,43 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         _buildFilterDropdown(
           'Scouting Level',
           _scoutFilters['scouting_level'],
-          ['Junior', 'Senior', 'Expert', 'Master'],
+          [
+            'Local',
+            'National',
+            'International',
+          ], // Example values, update as needed
           (value) => setState(() => _scoutFilters['scouting_level'] = value),
         ),
         const SizedBox(height: 16),
-        _buildCountryFilter(),
+        // Country
+        _buildFilterDropdown(
+          'Country',
+          _scoutFilters['country'],
+          [
+            'Tunisia',
+            'Algeria',
+            'Morocco',
+            'Egypt',
+            'France',
+            'Spain',
+            'Italy', // ...add more or use a country list
+          ],
+          (value) => setState(() => _scoutFilters['country'] = value),
+        ),
+        const SizedBox(height: 16),
+        // City (as text input for partial match)
+        TextField(
+          controller: _scoutCityController,
+          textDirection: TextDirection.ltr,
+          decoration: const InputDecoration(
+            labelText: 'City',
+            labelStyle: TextStyle(color: Colors.white70),
+            filled: true,
+            fillColor: Color(0xFF23234b),
+            border: OutlineInputBorder(),
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
       ],
     );
   }
@@ -477,18 +702,18 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget _buildClubFilters() {
     return Column(
       children: [
-        _buildFilterDropdown(
-          'League',
-          _clubFilters['league'],
-          ['Ligue 1', 'Ligue 2', 'Regional League', 'Youth League'],
-          (value) => setState(() => _clubFilters['league'] = value),
-        ),
-        const SizedBox(height: 16),
-        _buildFilterDropdown(
-          'Division',
-          _clubFilters['division'],
-          ['Professional', 'Semi-Professional', 'Amateur'],
-          (value) => setState(() => _clubFilters['division'] = value),
+        // Location (text input for city/country substring)
+        TextField(
+          controller: _clubLocationController,
+          textDirection: TextDirection.ltr,
+          decoration: const InputDecoration(
+            labelText: 'Location (city or country)',
+            labelStyle: TextStyle(color: Colors.white70),
+            filled: true,
+            fillColor: Color(0xFF23234b),
+            border: OutlineInputBorder(),
+          ),
+          style: const TextStyle(color: Colors.white),
         ),
       ],
     );
@@ -635,73 +860,6 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           hintText: 'Select Country',
         ),
       ],
-    );
-  }
-
-  Widget _buildFootballersTab() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.yellow),
-      );
-    }
-
-    if (!_hasSearched) {
-      return _buildEmptyState('Search for footballers', Icons.sports_soccer);
-    }
-
-    if (_footballers.isEmpty) {
-      return _buildEmptyState('No footballers found', Icons.search_off);
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _footballers.length,
-      itemBuilder:
-          (context, index) => _buildFootballerCard(_footballers[index]),
-    );
-  }
-
-  Widget _buildScoutsTab() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.yellow),
-      );
-    }
-
-    if (!_hasSearched) {
-      return _buildEmptyState('Search for scouts', Icons.search);
-    }
-
-    if (_scouts.isEmpty) {
-      return _buildEmptyState('No scouts found', Icons.search_off);
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _scouts.length,
-      itemBuilder: (context, index) => _buildScoutCard(_scouts[index]),
-    );
-  }
-
-  Widget _buildClubsTab() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.yellow),
-      );
-    }
-
-    if (!_hasSearched) {
-      return _buildEmptyState('Search for clubs', Icons.business);
-    }
-
-    if (_clubs.isEmpty) {
-      return _buildEmptyState('No clubs found', Icons.search_off);
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _clubs.length,
-      itemBuilder: (context, index) => _buildClubCard(_clubs[index]),
     );
   }
 

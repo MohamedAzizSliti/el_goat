@@ -116,14 +116,20 @@ class MyApp extends StatelessWidget {
         '/clubsignup':
             (ctx) => ClubSignUpPage(
               userId: Supabase.instance.client.auth.currentUser!.id,
+              name: '', // No name available for direct route
+              email: Supabase.instance.client.auth.currentUser?.email ?? '',
             ),
         '/scoutsignup':
             (ctx) => ScoutSignUpPage(
               userId: Supabase.instance.client.auth.currentUser!.id,
+              name: '', // No name available for direct route
+              email: Supabase.instance.client.auth.currentUser?.email ?? '',
             ),
         '/footballersignup':
             (ctx) => FootballerSignUpPage(
               userId: Supabase.instance.client.auth.currentUser!.id,
+              name: '', // No name available for direct route
+              email: Supabase.instance.client.auth.currentUser?.email ?? '',
             ),
         '/favorites': (ctx) => const FavoritesPage(),
         '/notifications': (ctx) => const NotificationsPage(),
